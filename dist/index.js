@@ -475,20 +475,19 @@ class GoogleApi {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _google_api__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./google-api */ "./entry/google-api.ts");
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _components_google_login_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/google-login.component */ "./components/google-login.component.ts");
-/* harmony import */ var _components_root_root_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../components/root/root.component */ "./components/root/root.component.ts");
-/* harmony import */ var _components_context_context_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../components/context/context.component */ "./components/context/context.component.ts");
-/* harmony import */ var _store_RootStore__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../store/RootStore */ "./store/RootStore.ts");
-/* harmony import */ var _hypertype_infr__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @hypertype/infr */ "./node_modules/@hypertype/infr/dist/esm/common/index.js");
-/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @hypertype/infr-browser */ "./node_modules/@hypertype/infr-browser/dist/esm/index.js");
-/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _model_container__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../model/container */ "./model/container.ts");
-/* harmony import */ var _store_selection_store__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../store/selection.store */ "./store/selection.store.ts");
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _components_google_login_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/google-login.component */ "./components/google-login.component.ts");
+/* harmony import */ var _components_root_root_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/root/root.component */ "./components/root/root.component.ts");
+/* harmony import */ var _components_context_context_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../components/context/context.component */ "./components/context/context.component.ts");
+/* harmony import */ var _store_RootStore__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../store/RootStore */ "./store/RootStore.ts");
+/* harmony import */ var _hypertype_infr__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @hypertype/infr */ "./node_modules/@hypertype/infr/dist/esm/common/index.js");
+/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @hypertype/infr-browser */ "./node_modules/@hypertype/infr-browser/dist/esm/index.js");
+/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var _model_container__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../model/container */ "./model/container.ts");
+/* harmony import */ var _store_selection_store__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../store/selection.store */ "./store/selection.store.ts");
 
 
 
@@ -499,21 +498,20 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-const app = _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["ApplicationBuilder"]
-    .withInfrustructure(_model_container__WEBPACK_IMPORTED_MODULE_9__["ContextDomainContainer"])
-    .withInfrustructure(_hypertype_infr__WEBPACK_IMPORTED_MODULE_7__["InfrContainer"])
-    .withInfrustructure(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__["BrowserContainer"])
-    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_3__["GoogleLoginComponent"], _components_root_root_component__WEBPACK_IMPORTED_MODULE_4__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_5__["ContextComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_6__["RootStore"], _store_selection_store__WEBPACK_IMPORTED_MODULE_10__["SelectionStore"]))
+const app = _hypertype_app__WEBPACK_IMPORTED_MODULE_0__["ApplicationBuilder"]
+    .withInfrustructure(_model_container__WEBPACK_IMPORTED_MODULE_8__["ContextDomainContainer"])
+    .withInfrustructure(_hypertype_infr__WEBPACK_IMPORTED_MODULE_6__["InfrContainer"])
+    .withInfrustructure(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__["BrowserContainer"])
+    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_2__["GoogleLoginComponent"], _components_root_root_component__WEBPACK_IMPORTED_MODULE_3__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_4__["ContextComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_5__["RootStore"], _store_selection_store__WEBPACK_IMPORTED_MODULE_9__["SelectionStore"]))
     .build();
-_google_api__WEBPACK_IMPORTED_MODULE_0__["GoogleApi"].Load().then((auth) => {
-    app.Provide({
-        provide: _google_api__WEBPACK_IMPORTED_MODULE_0__["GoogleApiAuth"],
-        useValue: auth
-    });
-    app.Init();
-    app.get(_hypertype_app__WEBPACK_IMPORTED_MODULE_1__["RootStore"]).createStore();
-});
+// GoogleApi.Load().then((auth)=>{
+//     app.Provide({
+//         provide: GoogleApiAuth,
+//         useValue: auth
+//     });
+app.Init();
+app.get(_hypertype_app__WEBPACK_IMPORTED_MODULE_0__["RootStore"]).createStore();
+// });
 // 1. Load the JavaScript client library.
 
 
