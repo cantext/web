@@ -7,7 +7,7 @@ import {SelectionStore} from "../../store/selection.store";
 @Component({
     name: 'app-root',
     template: (html, root: Root) => html`
-        <app-context context-ids="${root.MainContext.Path}"></app-context>
+        <app-context path="${root.MainContext.Path}"></app-context>
     `,
     style: require('./root.style.less')
 })
@@ -25,15 +25,24 @@ export class RootComponent extends HyperComponent<Root> {
             tap((event: KeyboardEvent) => {
                 switch (event.key) {
                     case 'ArrowUp':
-                        this.selectionStore.Actions.Prev();
+                        event.preventDefault();
+                        if (event.ctrlKey)
+                            this.selectionStore.Actions.MoveUp();
+                        else
+                            this.selectionStore.Actions.Prev();
                         break;
                     case 'ArrowDown':
-                        this.selectionStore.Actions.Next();
+                        event.preventDefault();
+                        if (event.ctrlKey)
+                            this.selectionStore.Actions.MoveDown();
+                        else
+                            this.selectionStore.Actions.Next();
                         break;
                     case 'Tab':
+                        event.preventDefault();
                         event.shiftKey ?
-                            this.selectionStore.Actions.Left() :
-                            this.selectionStore.Actions.Right();
+                            this.selectionStore.Actions.MoveLeft() :
+                            this.selectionStore.Actions.MoveRight();
                         break;
                 }
 

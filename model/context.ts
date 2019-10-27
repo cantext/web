@@ -52,6 +52,14 @@ export class Context extends GeneralTree<Context> {
                 this.MoveRight();
                 this.root.Update.next();
             },
+            Down: () => {
+                this.MoveDown();
+                this.root.Update.next();
+            },
+            Up: () => {
+                this.MoveUp();
+                this.root.Update.next();
+            }
         }
     }
 }

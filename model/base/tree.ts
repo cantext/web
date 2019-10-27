@@ -50,7 +50,7 @@ export abstract class GeneralTree<T extends GeneralTree<T, TKey>, TKey = Id> {
     Parent: T;
 
 
-    protected MoveLeft(){
+    protected MoveLeft() {
         if (!this.Parent || !this.Parent.Parent)
             return;
         const index = this.Parent.Parent.Children.indexOf(this.Parent);
@@ -59,7 +59,8 @@ export abstract class GeneralTree<T extends GeneralTree<T, TKey>, TKey = Id> {
         grandParent.Children.splice(index + 1, 0, this.this);
         this.Parent = grandParent;
     }
-    protected MoveRight(){
+
+    protected MoveRight() {
         if (!this.Parent || !this.PrevSibling)
             return;
         const prevSibling = this.PrevSibling;
@@ -68,12 +69,31 @@ export abstract class GeneralTree<T extends GeneralTree<T, TKey>, TKey = Id> {
         this.Parent = prevSibling;
     }
 
-
-    get PrevSibling(): T{
-        return this.Parent.Children[this.Parent.Children.indexOf(this.this) - 1];
+    protected MoveUp() {
+        if (!this.Parent || !this.PrevSibling)
+            return;
+        const index = this.Parent.Children.indexOf(this.this);
+        this.Parent.Children.splice(index - 1, 2, this.this, this.Parent.Children[index - 1]);
     }
-    get NextSibling(): T{
-        return this.Parent.Children[this.Parent.Children.indexOf(this.this) + 1];
+
+    protected MoveDown() {
+        if (!this.Parent)
+            return;
+        if (this.NextSibling) {
+            const index = this.Parent.Children.indexOf(this.this);
+            this.Parent.Children.splice(index, 2, this.Parent.Children[index + 1], this.this);
+        } else {
+            this.MoveLeft();
+        }
+    }
+
+
+    get PrevSibling(): T {
+        return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) - 1];
+    }
+
+    get NextSibling(): T {
+        return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) + 1];
     }
 
     public get Prev(): T {

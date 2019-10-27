@@ -30,7 +30,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
             ParentIds: [],
             Time: utc().toISO(),
             Content: [{
-                Text: 'Контекст',
+                Text: '1 Контекст',
             }]
         },
         {
@@ -38,7 +38,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
             ParentIds: ['1'],
             Time: utc().toISO(),
             Content: [{
-                Text: 'Пример использования',
+                Text: '1.1 Пример использования',
             }]
         },
         {
@@ -46,7 +46,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
             ParentIds: ['1'],
             Time: utc().toISO(),
             Content: [{
-                Text: 'Проектировани',
+                Text: '1.2 Проектировани',
             }]
         },
         {
@@ -54,7 +54,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
             ParentIds: ['1.2'],
             Time: utc().toISO(),
             Content: [{
-                Text: 'Сущности',
+                Text: '1.2.1 Сущности',
             }]
         },
         {
@@ -62,7 +62,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
             ParentIds: ['1.2'],
             Time: utc().toISO(),
             Content: [{
-                Text: 'Поведение',
+                Text: '1.2.2 Поведение',
             }]
         }
     ],

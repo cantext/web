@@ -2,6 +2,7 @@ import {Injectable} from "@hypertype/core";
 import {ActionsCreator, objectReducer, ObservableStore, Reducer} from "@hypertype/app";
 import {Root} from "../model/root";
 import {RootState, RootStore} from "./RootStore";
+import {Id, IdPath} from "../model/base/id";
 
 @Injectable()
 export class SelectionStore extends ObservableStore<SelectionState> {
@@ -16,7 +17,8 @@ export class SelectionStore extends ObservableStore<SelectionState> {
 }
 
 export class SelectionState {
-    SelectedContextIdPath: string;
+    Path: string;
+    Key: Id;
 }
 
 enum Actions {
@@ -24,6 +26,8 @@ enum Actions {
     left,
     prev,
     next,
+    up,
+    down
 }
 
 class SelectionActions extends ActionsCreator<RootState> {
@@ -33,9 +37,11 @@ class SelectionActions extends ActionsCreator<RootState> {
     }
 
 
-    public Path(ids: string) {
+    public Path(path: IdPath) {
+        const context = this.root.get(path);
         this.Diff({
-            SelectedContextIdPath: ids
+            Path: path.join(':'),
+            Key: context.Key,
         });
     }
 
@@ -47,11 +53,18 @@ class SelectionActions extends ActionsCreator<RootState> {
         this.Custom(Actions.next);
     }
 
-    Left() {
+    MoveLeft() {
         this.Custom(Actions.left);
     }
-    Right() {
+    MoveRight() {
         this.Custom(Actions.right);
+    }
+
+    MoveUp() {
+        this.Custom(Actions.up);
+    }
+    MoveDown() {
+        this.Custom(Actions.down);
     }
 
     private Custom(type: Actions, payload?) {
@@ -70,31 +83,47 @@ class SelectionReducer {
 
 
     private objectReducer = (state: SelectionState, action) => {
-        if (!state.SelectedContextIdPath)
-            state.SelectedContextIdPath = this.root.MainContext.Id;
-        const selectedContext = this.root.get(state.SelectedContextIdPath.split(':'));
+        if (!state.Path)
+            state.Path = this.root.MainContext.Id;
+        const selectedContext = this.root.get(state.Path.split(':'));
         switch (Actions[action.type as string]) {
             case Actions.left:
                 selectedContext.Actions.Move.Left();
                 return {
-                    SelectedContextIdPath: selectedContext.Path.join(':')
+                    Path: selectedContext.Path.join(':'),
+                    Key: selectedContext.Key,
                 };
             case Actions.right:
                 selectedContext.Actions.Move.Right();
                 return {
-                    SelectedContextIdPath: selectedContext.Path.join(':')
+                    Path: selectedContext.Path.join(':'),
+                    Key: selectedContext.Key,
+                };
+            case Actions.up:
+                selectedContext.Actions.Move.Up();
+                return {
+                    Path: selectedContext.Path.join(':'),
+                    Key: selectedContext.Key,
+                };
+            case Actions.down:
+                selectedContext.Actions.Move.Down();
+                return {
+                    Path: selectedContext.Path.join(':'),
+                    Key: selectedContext.Key,
                 };
             case Actions.prev:
                 if (!selectedContext.Prev)
                     return state;
                 return {
-                    SelectedContextIdPath: selectedContext.Prev.Path.join(':')
+                    Path: selectedContext.Prev.Path.join(':'),
+                    Key: selectedContext.Prev.Key,
                 };
             case Actions.next:
                 if (!selectedContext.Next)
                     return state;
                 return {
-                    SelectedContextIdPath: selectedContext.Next.Path.join(':')
+                    Path: selectedContext.Next.Path.join(':'),
+                    Key: selectedContext.Next.Key,
                 };
         }
         return state;

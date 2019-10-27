@@ -33,12 +33,12 @@
   "devDependencies": {
     "@hypertype/app": "latest",
     "@hypertype/core": "latest",
+    "@hypertype/domain": "latest",
     "@hypertype/infr": "latest",
     "@hypertype/infr-browser": "latest",
     "@hypertype/tools": "latest",
-    "@hypertype/ui": "latest",
+    "@hypertype/ui": "^3.0.5",
     "@types/gapi": "0.0.39",
-    "typescript": "^3.6.4",
-    "@hypertype/domain": "latest"
+    "typescript": "^3.6.4"
   }
 }
