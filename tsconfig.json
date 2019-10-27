@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "baseUrl": ".",
+    "rootDir": ".",
+    "declarationDir": "./dist/typings",
+    "outDir": "./dist/es6",
+    "lib": [
+      "esnext",
+      "dom"
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "@cantext/web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "hypertype server --run --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/cantext/web.git"
+  },
+  "author": "stp4ka",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cantext/web/issues"
+  },
+  "homepage": "https://github.com/cantext/web#readme",
+  "dependencies": {
+    "chat-window": "0.0.5"
+  },
+  "hypertype": {
+    "server": {
+      "index": "./entry/index.ts",
+      "type": "server",
+      "html": "./entry/index.html",
+      "publicPath": "",
+      "host": "localhost",
+      "port": 4000
+    }
+  },
+  "devDependencies": {
+    "@hypertype/app": "latest",
+    "@hypertype/core": "latest",
+    "@hypertype/infr": "latest",
+    "@hypertype/infr-browser": "latest",
+    "@hypertype/tools": "latest",
+    "@hypertype/ui": "latest",
+    "@types/gapi": "0.0.39",
+    "typescript": "^3.6.4",
+    "@hypertype/domain": "latest"
+  }
+}
