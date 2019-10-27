@@ -10,13 +10,15 @@ import {
     merge,
     Observable,
     shareReplay,
+    switchMap,
     tap,
-    switchMap
+    fromEvent
 } from "@hypertype/core";
 import {RootStore} from "../../store/RootStore";
 import {Context} from "../../model/context";
-import {Id, IdPath} from "../../model/base/id";
+import {IdPath} from "../../model/base/id";
 import {Root} from "../../model/root";
+import {SelectionStore} from "../../store/selection.store";
 
 @Injectable(true)
 @Component({
@@ -30,15 +32,19 @@ import {Root} from "../../model/root";
         const isCollapsed = state.state.includes('collapsed');
         return html`
             <div class="${`context-inner ${state.state.join(' ')}`}">
-                <span class="arrow"></span>
-                <span onfocusin="${events.focus(e => e)}" 
-                        contenteditable="true">
-                    ${context.toString()}
-                </span>
+                <div class="body">
+                    <span class="arrow"></span>
+                    <span onfocusin="${events.focus(e => e)}" 
+                            contenteditable="true">
+                        ${context.toString()}
+                    </span>
+                </div>
                 <div class="children">
-                    ${isCollapsed ? '' : context.Children.map(child => wire(html, child.Id)`
-                        <app-context context-id="${child.Id}"></app-context>
-                    `)}
+                ${isCollapsed ? '' : context.Children.map(child => 
+                    wire(wire, `context${child.Key}`)`
+                        <app-context context-ids="${child.Path}"></app-context>
+                    `
+                )}
                 </div>
             </div>
         `
@@ -47,28 +53,31 @@ import {Root} from "../../model/root";
 })
 export class ContextComponent extends HyperComponent<IState> {
 
-    constructor(private rootStore: RootStore,
+    constructor(private selectionStore: SelectionStore,
                 private root: Root) {
         super();
     }
 
 
     @property()
-    public contextId$: Observable<IdPath>;
-    public contextId: IdPath;
+    public contextIds$: Observable<IdPath>;
 
-    private context$ = this.contextId$.pipe(
-        switchMap(id => this.root.GetContext$(id))
+    private get contextIds(): IdPath {
+        return this['context-ids'];
+    }
+
+    private context$ = this.contextIds$.pipe(
+        switchMap(ids => this.root.GetContext$(ids)),
     );
 
     private IsSelected$ = combineLatest([
-        this.rootStore.asObservable(),
+        this.selectionStore.asObservable(),
         this.context$,
     ]).pipe(
         map(([state, context]) => {
             if (!state || !context)
                 return false;
-            return state.SelectedContextId == context.Data.Id;
+            return state.SelectedContextIdPath == context.Path.join(':');
         }),
         distinctUntilChanged(),
         shareReplay(1),
@@ -78,33 +87,34 @@ export class ContextComponent extends HyperComponent<IState> {
         this.context$,
         this.IsSelected$,
     ]).pipe(
+        // tap(([context, isSelected]) => {
+        //     console.log('state', context.Id, isSelected);
+        // }),
         map(([context, isSelected]) => ({
             context, isSelected,
             state: [
+                isSelected ? 'selected' : '',
                 (context.Children.length == 0) ? 'empty' : '',
                 (context.Collapsed) ? 'collapsed' : ''
             ] as any[],
         })),
-        tap(({context, isSelected}) => {
-            console.log('state', context.Id, isSelected);
-        }),
         filter(Fn.Ib)
     );
 
     public Actions$ = merge(
-        combineLatest([this.IsSelected$, this.select('span')]).pipe(
+        combineLatest([this.IsSelected$, this.select('[contenteditable]')]).pipe(
             tap(([isSelected, span]) => {
                 if (isSelected) {
-                    console.log('focus', this.contextId, isSelected);
+                    // console.log('focus', this.contextIds, isSelected);
                     (span as HTMLElement).focus();
                 }
             })
         ),
         this.Events$.pipe(
             filter(e => e.type == 'focus'),
-            tap(({args}) => {
-                console.log('event', args, this.contextId);
-                this.rootStore.Actions.Select(this.contextId);
+            tap(async ({args}) => {
+                // console.log('event', args, this.contextIds);
+                this.selectionStore.Actions.Path(this.contextIds.join(':'));
             })
         )
     ).pipe(

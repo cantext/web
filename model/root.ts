@@ -1,33 +1,32 @@
 import {DefaultData} from "./dbo/default";
 import {Id, IdPath} from "./base/id";
-import {treeMap} from "./base/tree";
+import {GeneralTree, treeMap} from "./base/tree";
 import {Context} from "./context";
 import {ContextDbo, RootDbo} from "./dbo/context.dbo";
 import {User} from "./user";
-import {filter, Fn, map, Observable, of} from "@hypertype/core";
+import {map, Observable, of, ReplaySubject, mapTo, debounceTime, tap, shareReplay} from "@hypertype/core";
+import {Subject} from "@hypertype/infr/dist/typings/common/signalr/Utils";
 
-
-export class Root {
+export class Root extends GeneralTree<Context> {
     ContextMap: Map<Id, Context[]>;
     MainContext: Context;
+
+    get Children() {
+        return [this.MainContext];
+    }
+
     UserMap: Map<Id, User>;
     CurrentUser: User;
 
     constructor(dbo: RootDbo = DefaultData()) {
+        super();
+        window['root'] = this;
         this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new User(userDbo)]));
         const mainContextDbo = dbo.Contexts.find(c => c.ParentIds.length == 0);
         const contextDboTree = treeMap<ContextDbo>(mainContextDbo, item => dbo.Contexts
             .filter(c => c.ParentIds.includes(item.Id)));
 
-        this.MainContext = contextDboTree.map(t => new Context(t));
-        this.MainContext.forEach(context => {
-            context.Children.forEach((child, i) => {
-                if (i > 0)
-                    child.PrevSibling = context.Children[i - 1];
-                if (i < context.Children.length - 1)
-                    child.NextSibling = context.Children[i + 1];
-            });
-        });
+        this.MainContext = contextDboTree.map(t => new Context(this, t));
 
         this.ContextMap = this.MainContext
             .flatMap<Context>(c => c)
@@ -47,13 +46,23 @@ export class Root {
                 context.Collapsed = state.Collapsed;
             }
         }
+        this.Update.next();
     }
 
+    public Update = new ReplaySubject<void>(1);
+    public State$: Observable<Root> = this.Update.pipe(
+        debounceTime(0),
+        tap(() => {
+            console.log(...this.MainContext.flatMap(t => t.Path));
+        }),
+        mapTo(this),
+        shareReplay(1),
+    );
 
-    public State$: Observable<Root> = of(this);
-
-    public GetContext$(id: IdPath): Observable<Context> {
-        return this.MainContext.find(id);
+    public GetContext$(ids: IdPath): Observable<Context> {
+        return this.State$.pipe(
+            map(root => root.get(ids))
+        );
     }
 }
 

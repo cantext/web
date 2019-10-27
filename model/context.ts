@@ -1,6 +1,8 @@
 import {ContextDbo, RelationType} from "./dbo/context.dbo";
 import {GeneralTree} from "./base/tree";
 import {User} from "./user";
+import {Id} from "./base/id";
+import {Root} from "./root";
 
 export class Context extends GeneralTree<Context> {
 
@@ -8,21 +10,10 @@ export class Context extends GeneralTree<Context> {
     Children: Context[] = [];
     Parent: Context;
     Users: Map<User, RelationType> = new Map<User, RelationType>();
-    PrevSibling: Context;
     Collapsed: boolean = false;
 
-    public get Prev(): Context {
-        return this.PrevSibling || this.Parent;
-    }
 
-    public get Next(): Context {
-        return this.Children[0] || this.NextSibling || (this.Parent && this.Parent.NextSibling);
-    }
-
-    NextSibling: Context;
-
-
-    constructor(dbo: ContextDbo) {
+    constructor(private root: Root, dbo: ContextDbo) {
         super();
         this.Data = dbo;
     }
@@ -42,4 +33,25 @@ export class Context extends GeneralTree<Context> {
         return this.Data.Id;
     }
 
+    public get Path() {
+        if (!this.Parent)
+            return [this.Id];
+        return [...this.Parent.Path, this.Id];
+    }
+
+    public Key: Id = Id();
+
+
+    public Actions = {
+        Move: {
+            Left: () => {
+                this.MoveLeft();
+                this.root.Update.next();
+            },
+            Right: () => {
+                this.MoveRight();
+                this.root.Update.next();
+            },
+        }
+    }
 }

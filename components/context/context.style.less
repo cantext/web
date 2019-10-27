@@ -2,6 +2,16 @@ app-context {
   display: block;
   padding: 10px 0;
 
+  .body{
+    box-sizing: border-box;
+    height: 2em;
+  }
+
+  .selected > .body{
+    //border: .2em solid #bda;
+
+  }
+
   .arrow{
     display: inline-block;
     width: 1em;
@@ -26,5 +36,10 @@ app-context {
 
   .empty .children{
     display: none;
+  }
+
+  [contenteditable]:focus{
+    border: none;
+    outline: none;
   }
 }

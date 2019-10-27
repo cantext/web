@@ -1,45 +1,21 @@
-import {
-    ActionsCreator,
-    ObservableStore,
-    RootStore as RStore,
-    Reducer,
-    combineReducers,
-    objectReducer
-} from "@hypertype/app";
-import {Id} from "../model/base/id";
-import {Injectable} from "@hypertype/core";
-import {Context} from "../model/context";
+import {ActionsCreator, objectReducer, ObservableStore, Reducer, RootStore as RStore} from "@hypertype/app";
+import {Fn, Injectable} from "@hypertype/core";
+import {Root} from "../model/root";
 
-class RootActions extends ActionsCreator<RootState> {
-
-    public Select(context: Context){
-        this.Diff({
-            SelectedContextId: context.Data.Id
-        });
-    }
-}
 
 @Injectable()
 export class RootStore extends ObservableStore<RootState> {
-    constructor(root: RStore){
-        super(root, 'root');
+    constructor(rootStore: RStore, private root: Root) {
+        super(rootStore, 'root');
     }
 
-    public Actions = new RootActions();
+    public Actions = new ActionsCreator();
 
-    public reducer = new RootReducer();
+    public reducer = {
+        reduce: objectReducer<RootState>(Fn.I)
+    }
 
 }
 
 export class RootState {
-    SelectedContextId: Id;
-}
-
-export class RootReducer {
-
-    private objectReducer = (state: RootState, action) => {
-        return state;
-    };
-
-    public reduce: Reducer<RootState> = objectReducer<RootState>(this.objectReducer);
 }

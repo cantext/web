@@ -3,9 +3,9 @@ import {Id, IdPath} from "./id";
 export type Leaf<T> = { Children: T[]; Parent: T; };
 
 
-export abstract class GeneralTree<T extends GeneralTree<T>> {
+export abstract class GeneralTree<T extends GeneralTree<T, TKey>, TKey = Id> {
 
-    get this(): T {
+    private get this(): T {
         return this as any;
     }
 
@@ -34,20 +34,55 @@ export abstract class GeneralTree<T extends GeneralTree<T>> {
         forEachItem(this);
     }
 
-    get(ids: Id[]) {
+    get(ids: TKey[]): T {
         const [id, ...rest] = ids;
         const child = this.Children.find(c => c.Id == id);
         if (!child)
             return null;
         if (!rest.length)
-            return child;
+            return child.this;
         return child.get(rest);
     }
 
-    Id: Id;
+    Id: TKey;
     Path: IdPath;
-    Children: GeneralTree<T>[];
-    Parent: GeneralTree<T>;
+    Children: T[];
+    Parent: T;
+
+
+    protected MoveLeft(){
+        if (!this.Parent || !this.Parent.Parent)
+            return;
+        const index = this.Parent.Parent.Children.indexOf(this.Parent);
+        const grandParent = this.Parent.Parent;
+        this.Parent.Children.remove(this.this);
+        grandParent.Children.splice(index + 1, 0, this.this);
+        this.Parent = grandParent;
+    }
+    protected MoveRight(){
+        if (!this.Parent || !this.PrevSibling)
+            return;
+        const prevSibling = this.PrevSibling;
+        this.Parent.Children.remove(this.this);
+        prevSibling.Children.push(this.this);
+        this.Parent = prevSibling;
+    }
+
+
+    get PrevSibling(): T{
+        return this.Parent.Children[this.Parent.Children.indexOf(this.this) - 1];
+    }
+    get NextSibling(): T{
+        return this.Parent.Children[this.Parent.Children.indexOf(this.this) + 1];
+    }
+
+    public get Prev(): T {
+        return this.PrevSibling || this.Parent;
+    }
+
+    public get Next(): T {
+        return this.Children[0] || this.NextSibling || (this.Parent && this.Parent.NextSibling);
+    }
 }
 
 

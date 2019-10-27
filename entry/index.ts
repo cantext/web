@@ -8,6 +8,7 @@ import {RootStore} from "../store/RootStore";
 import {InfrContainer} from "@hypertype/infr";
 import {BrowserContainer} from "@hypertype/infr-browser";
 import {ContextDomainContainer} from "../model/container";
+import {SelectionStore} from "../store/selection.store";
 
 const app = ApplicationBuilder
     .withInfrustructure(ContextDomainContainer)
@@ -17,7 +18,8 @@ const app = ApplicationBuilder
         GoogleLoginComponent,
         RootComponent,
         ContextComponent,
-        RootStore
+        RootStore,
+        SelectionStore
     ))
     .build();
 
