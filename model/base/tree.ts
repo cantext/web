@@ -1,118 +1,49 @@
-import {Id, IdPath} from "./id";
+import {Id} from "./id";
+import {Leaf} from "./leaf";
+import {TreeCursor} from "./cursor";
 
-export type Leaf<T> = { Children: T[]; Parent: T; };
-
-
-export abstract class GeneralTree<T extends GeneralTree<T, TKey>, TKey = Id> {
-
-    private get this(): T {
-        return this as any;
-    }
-
-    flatMap<U>(fn: (t: T) => U) {
-        return [
-            fn(this.this),
-            ...this.Children.map(c => c.flatMap(fn)).flat()
-        ];
-    }
-
-    map<U extends Leaf<U>>(fn: (t: T) => U) {
-        const mapItem = item => {
-            const result = fn(item);
-            result.Children = item.Children
-                .map(mapItem);
-            return result;
-        };
-        return mapItem(this);
-    }
-
-    forEach(fn: (t: T) => void | any) {
-        const forEachItem = item => {
-            fn(item);
-            item.Children.forEach(forEachItem);
-        };
-        forEachItem(this);
-    }
-
-    get(ids: TKey[]): T {
-        const [id, ...rest] = ids;
-        const child = this.Children.find(c => c.Id == id);
-        if (!child)
-            return null;
-        if (!rest.length)
-            return child.this;
-        return child.get(rest);
-    }
-
+export interface ILeaf<TKey> {
     Id: TKey;
-    Path: IdPath;
-    Children: T[];
-    Parent: T;
-
-
-    protected MoveLeft() {
-        if (!this.Parent || !this.Parent.Parent)
-            return;
-        const index = this.Parent.Parent.Children.indexOf(this.Parent);
-        const grandParent = this.Parent.Parent;
-        this.Parent.Children.remove(this.this);
-        grandParent.Children.splice(index + 1, 0, this.this);
-        this.Parent = grandParent;
-    }
-
-    protected MoveRight() {
-        if (!this.Parent || !this.PrevSibling)
-            return;
-        const prevSibling = this.PrevSibling;
-        this.Parent.Children.remove(this.this);
-        prevSibling.Children.push(this.this);
-        this.Parent = prevSibling;
-    }
-
-    protected MoveUp() {
-        if (!this.Parent || !this.PrevSibling)
-            return;
-        const index = this.Parent.Children.indexOf(this.this);
-        this.Parent.Children.splice(index - 1, 2, this.this, this.Parent.Children[index - 1]);
-    }
-
-    protected MoveDown() {
-        if (!this.Parent)
-            return;
-        if (this.NextSibling) {
-            const index = this.Parent.Children.indexOf(this.this);
-            this.Parent.Children.splice(index, 2, this.Parent.Children[index + 1], this.this);
-        } else {
-            this.MoveLeft();
-        }
-    }
-
-
-    get PrevSibling(): T {
-        return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) - 1];
-    }
-
-    get NextSibling(): T {
-        return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) + 1];
-    }
-
-    public get Prev(): T {
-        return this.PrevSibling || this.Parent;
-    }
-
-    public get Next(): T {
-        return this.Children[0] || this.NextSibling || (this.Parent && this.Parent.NextSibling);
-    }
+    Children: TKey[];
 }
 
+export abstract class Tree<TLeaf extends Leaf<TValue, TKey>,
+    TValue extends ILeaf<TKey>,
+    TKey = Id> {
 
+    public abstract get Root(): TLeaf;
+
+    public abstract get Items(): Map<TKey, TLeaf>;
+
+    private get Leafs(): TLeaf[] {
+        return Array.from(this.Items.values());
+    }
+
+    public SetParents() {
+        this.Items.forEach(leaf => leaf.Parents = new Map());
+        const parents = this.Leafs
+            .map(parent => parent.Children.map(child => ({child, parent})))
+            .flat()
+            .groupBy(({child}) => child);
+        Array.from(parents.entries())
+            .forEach(([child, parents]) => {
+                child.Parents = new Map(parents.map(({parent}) => [parent.Id, parent]));
+            });
+    }
+
+    public Cursor = new TreeCursor(this);
+
+}
+
+/*
 export function treeMap<T>(root: T, children: (t: T) => T[]) {
     return {
         map: <U extends Leaf<U>>(fn: (t: T) => U) => {
             const mapItem = item => {
                 const result = fn(item);
-                result.Children = children(item)
-                    .map(mapItem);
+                result.Path =
+                    result.Children = children(item)
+                        .map(mapItem);
                 result.Children.forEach(child => child.Parent = result);
                 return result;
             };
@@ -128,3 +59,4 @@ export function treeMap<T>(root: T, children: (t: T) => T[]) {
         }
     }
 }
+*/

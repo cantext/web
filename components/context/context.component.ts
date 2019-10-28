@@ -18,8 +18,8 @@ import {
 } from "@hypertype/core";
 import {RootStore} from "../../store/RootStore";
 import {Context} from "../../model/context";
-import {IdPath} from "../../model/base/id";
-import {Root} from "../../model/root";
+import {Path} from "../../model/base/id";
+import {ContextTree} from "../../model/contextTree";
 import {SelectionStore} from "../../store/selection.store";
 
 @Injectable(true)
@@ -32,12 +32,11 @@ import {SelectionStore} from "../../store/selection.store";
         const context = state.context;
         const isEmpty = state.state.includes('empty');
         const isCollapsed = state.state.includes('collapsed');
-        console.log('render',context.Key, ...context.Children.map(c => c.Key));
         return html`
             <div class="${`context-inner ${state.state.join(' ')}`}">
                 <div class="body">
                     <span class="arrow"></span>
-                    <span id=${`editor${context.Key}`} 
+                    <span id=${`editor`} 
                           onclick="${events.focus(e => e)}" 
                           contenteditable="true">
                         ${context.toString()}
@@ -45,8 +44,8 @@ import {SelectionStore} from "../../store/selection.store";
                 </div>
                 <div class="children">
                 ${isCollapsed ? '' : context.Children.map(child => 
-                    wire(wire, `context${child.Key}`)`
-                        <app-context path="${child.Path}"></app-context>
+                    wire(wire, `context${child.getKey([...state.path,child.Id])}`)`
+                        <app-context path="${[...state.path,child.Id]}"></app-context>
                     `
                 )}
                 </div>
@@ -58,37 +57,33 @@ import {SelectionStore} from "../../store/selection.store";
 export class ContextComponent extends HyperComponent<IState> {
 
     constructor(private selectionStore: SelectionStore,
-                private root: Root) {
+                private root: ContextTree) {
         super();
     }
 
 
     @property()
-    public path$: Observable<IdPath>;
-    private path: IdPath ;
+    public path$: Observable<Path>;
 
-    private contextInitial$ = this.path$.pipe(
-        switchMap(ids => this.root.GetContext$(ids)),
-        filter(Fn.Ib),
-        first(),
+    private id$ = this.path$.pipe(
+        map(ids => ids[ids.length - 1]),
+        distinctUntilChanged(),
+        shareReplay(1)
     );
 
-    private context$ = this.root.State$.pipe(
-        withLatestFrom(this.contextInitial$),
-        map(([,context]) => context),
-        distinctUntilChanged(null, context => `${context.toString()}.${context.Children.map(c => c.Key).join('.')}`),
-        // tap(context => console.log(`${context.toString()}.${context.Children.map(c => c.Key).join('.')}`)),
-        shareReplay(1),
+    private context$ = this.id$.pipe(
+        switchMap(id => this.root.Items.get(id).State$),
+        filter(Fn.Ib),
     );
 
     private IsSelected$ = combineLatest([
-        this.selectionStore.asObservable(),
-        this.contextInitial$,
+        this.root.Cursor.Path$,
+        this.path$,
     ]).pipe(
-        map(([state, context]) => {
-            if (!state || !context)
+        map(([cursorPath, currentPath]) => {
+            if (!cursorPath || !currentPath)
                 return false;
-            return state.Key == context.Key;
+            return cursorPath == currentPath;
         }),
         distinctUntilChanged(),
         shareReplay(1),
@@ -96,10 +91,11 @@ export class ContextComponent extends HyperComponent<IState> {
 
     public State$ = combineLatest([
         this.context$,
+        this.path$,
         this.IsSelected$,
     ]).pipe(
-        map(([context, isSelected]) => ({
-            context, isSelected,
+        map(([context, path, isSelected]) => ({
+            context, isSelected, path,
             state: [
                 isSelected ? 'selected' : '',
                 (context.Children.length == 0) ? 'empty' : '',
@@ -112,22 +108,22 @@ export class ContextComponent extends HyperComponent<IState> {
     private Editor$ = combineLatest([this.Element$, this.context$]).pipe(
         first(),
         map(([element, context]) =>
-            element.querySelector(`#editor${context.Key}`) as HTMLElement)
+            element.querySelector(`#editor`) as HTMLElement)
     );
 
     public Actions$ = merge(
         combineLatest([this.IsSelected$, this.Editor$]).pipe(
             tap(([isSelected, editor]) => {
                 if (isSelected && document.activeElement != editor) {
-                    console.log('focus', this.path, isSelected);
                     editor.focus();
                 }
             })
         ),
         this.Events$.pipe(
             filter(e => e.type == 'focus'),
-            tap(async ({args}) => {
-                this.selectionStore.Actions.Path(this.path);
+            withLatestFrom(this.path$),
+            tap(([, path]) => {
+                this.root.Cursor.SetPath(path);
             })
         )
     ).pipe(
@@ -138,5 +134,6 @@ export class ContextComponent extends HyperComponent<IState> {
 interface IState {
     state: ('empty' | 'collapsed')[];
     context: Context;
+    path: Path;
     isSelected: boolean;
 }

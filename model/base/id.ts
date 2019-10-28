@@ -1,5 +1,5 @@
 export type Id = string;
-export type IdPath = Id[];
+export type Path<TKey = Id> = TKey[];
 
 let counter = 0;
 export function Id(): Id {

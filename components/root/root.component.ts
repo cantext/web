@@ -1,19 +1,19 @@
 import {Component, HyperComponent} from "@hypertype/ui";
-import {Root} from "../../model/root";
+import {ContextTree} from "../../model/contextTree";
 import {fromEvent, Injectable, merge, tap} from "@hypertype/core";
 import {SelectionStore} from "../../store/selection.store";
 
 @Injectable(true)
 @Component({
     name: 'app-root',
-    template: (html, root: Root) => html`
-        <app-context path="${root.MainContext.Path}"></app-context>
+    template: (html, root: ContextTree) => html`
+        <app-context path="${[root.Root.Id]}"></app-context>
     `,
     style: require('./root.style.less')
 })
-export class RootComponent extends HyperComponent<Root> {
+export class RootComponent extends HyperComponent<ContextTree> {
 
-    constructor(private root: Root,
+    constructor(private root: ContextTree,
                 private selectionStore: SelectionStore) {
         super();
     }
@@ -27,22 +27,28 @@ export class RootComponent extends HyperComponent<Root> {
                     case 'ArrowUp':
                         event.preventDefault();
                         if (event.ctrlKey)
-                            this.selectionStore.Actions.MoveUp();
+                            this.root.Move.Up();
                         else
-                            this.selectionStore.Actions.Prev();
+                            this.root.Cursor.Up();
                         break;
                     case 'ArrowDown':
                         event.preventDefault();
                         if (event.ctrlKey)
-                            this.selectionStore.Actions.MoveDown();
+                            this.root.Move.Down();
                         else
-                            this.selectionStore.Actions.Next();
+                            this.root.Cursor.Down();
+                        break;
+                    case 'ArrowLeft':
+                        if (event.ctrlKey)
+                            this.root.Move.Left();
+                        break;
+                    case 'ArrowRight':
+                        if (event.ctrlKey)
+                            this.root.Move.Right();
                         break;
                     case 'Tab':
                         event.preventDefault();
-                        event.shiftKey ?
-                            this.selectionStore.Actions.MoveLeft() :
-                            this.selectionStore.Actions.MoveRight();
+                        event.shiftKey ? this.root.Move.Left() : this.root.Move.Right();
                         break;
                 }
 

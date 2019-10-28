@@ -1,13 +1,13 @@
 import {Id} from "../base/id";
+import {ILeaf} from "../base/tree";
 
 export interface RootDbo {
+    Root: Id;
     Contexts: ContextDbo[];
     Users: UserDbo[];
     Relations: RelationDbo[];
     UserState: {
-        ContextsState: {
-            [key: string]: ContextState
-        }
+        ContextsState: IMap<Id, ContextState>
     }
 }
 
@@ -37,9 +37,7 @@ export enum RelationType {
 
 export type ISODate = string;
 
-export interface ContextDbo {
-    Id: Id;
-    ParentIds: Id[];
+export interface ContextDbo extends ILeaf<Id>{
     Content: Content[];
     Time: ISODate;
 }
@@ -75,3 +73,7 @@ export type Content = TextContent
     | Document
     | Email;
 
+export type IMap<TKey, TValue> = {
+    // @ts-ignore
+    [key: TKey]: TValue;
+}

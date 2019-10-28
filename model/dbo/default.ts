@@ -3,10 +3,11 @@ import {Id} from "../base/id";
 import {utc} from "@hypertype/core";
 
 const InititalData: () => RootDbo = () => ({
+    Root: '1',
     Contexts: [
         {
-            Id: Id(),
-            ParentIds: [],
+            Id: '1',
+            Children: [],
             Time: utc().toISO(),
             Content: [{
                 Text: '...',
@@ -24,10 +25,11 @@ const InititalData: () => RootDbo = () => ({
 });
 
 const DefaultDataTest1: () => RootDbo = () => ({
+    Root: '1',
     Contexts: [
         {
             Id: '1',
-            ParentIds: [],
+            Children: ['1.1', '1.2'],
             Time: utc().toISO(),
             Content: [{
                 Text: '1 Контекст',
@@ -35,7 +37,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
         },
         {
             Id: '1.1',
-            ParentIds: ['1'],
+            Children: ['1.2'],
             Time: utc().toISO(),
             Content: [{
                 Text: '1.1 Пример использования',
@@ -43,7 +45,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
         },
         {
             Id: '1.2',
-            ParentIds: ['1'],
+            Children: ['1.2.1', '1.2.2'],
             Time: utc().toISO(),
             Content: [{
                 Text: '1.2 Проектировани',
@@ -51,7 +53,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
         },
         {
             Id: '1.2.1',
-            ParentIds: ['1.2'],
+            Children: [],
             Time: utc().toISO(),
             Content: [{
                 Text: '1.2.1 Сущности',
@@ -59,7 +61,7 @@ const DefaultDataTest1: () => RootDbo = () => ({
         },
         {
             Id: '1.2.2',
-            ParentIds: ['1.2'],
+            Children: [],
             Time: utc().toISO(),
             Content: [{
                 Text: '1.2.2 Поведение',

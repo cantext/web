@@ -1,11 +1,11 @@
 import {ActionsCreator, objectReducer, ObservableStore, Reducer, RootStore as RStore} from "@hypertype/app";
 import {Fn, Injectable} from "@hypertype/core";
-import {Root} from "../model/root";
+import {ContextTree} from "../model/contextTree";
 
 
 @Injectable()
 export class RootStore extends ObservableStore<RootState> {
-    constructor(rootStore: RStore, private root: Root) {
+    constructor(rootStore: RStore, private root: ContextTree) {
         super(rootStore, 'root');
     }
 

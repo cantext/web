@@ -1,12 +1,12 @@
 import {Injectable} from "@hypertype/core";
 import {ActionsCreator, objectReducer, ObservableStore, Reducer} from "@hypertype/app";
-import {Root} from "../model/root";
+import {ContextTree} from "../model/contextTree";
 import {RootState, RootStore} from "./RootStore";
-import {Id, IdPath} from "../model/base/id";
+import {Id, Path} from "../model/base/id";
 
 @Injectable()
 export class SelectionStore extends ObservableStore<SelectionState> {
-    constructor(rootStore: RootStore, private root: Root) {
+    constructor(rootStore: RootStore, private root: ContextTree) {
         super(rootStore, 'select');
     }
 
@@ -18,7 +18,6 @@ export class SelectionStore extends ObservableStore<SelectionState> {
 
 export class SelectionState {
     Path: string;
-    Key: Id;
 }
 
 enum Actions {
@@ -30,27 +29,25 @@ enum Actions {
     down
 }
 
-class SelectionActions extends ActionsCreator<RootState> {
+class SelectionActions extends ActionsCreator<SelectionState> {
 
-    constructor(private root: Root) {
+    constructor(private root: ContextTree) {
         super();
     }
 
 
-    public Path(path: IdPath) {
-        const context = this.root.get(path);
-        this.Diff({
-            Path: path.join(':'),
-            Key: context.Key,
-        });
+    public Path(path: Path) {
+        this.root.Cursor.Path = path;
     }
 
     public Prev() {
-        this.Custom(Actions.prev);
+        this.root.Cursor.Path = this.root.Cursor.getTop();
+        this.root.Update.next();
     }
 
-    Next() {
-        this.Custom(Actions.next);
+    public Next() {
+        this.root.Cursor.Path = this.root.Cursor.getBottom();
+        this.root.Update.next();
     }
 
     MoveLeft() {
@@ -77,18 +74,19 @@ class SelectionActions extends ActionsCreator<RootState> {
 }
 
 class SelectionReducer {
-    constructor(private root: Root) {
+    constructor(private tree: ContextTree) {
 
     }
 
 
     private objectReducer = (state: SelectionState, action) => {
         if (!state.Path)
-            state.Path = this.root.MainContext.Id;
-        const selectedContext = this.root.get(state.Path.split(':'));
+            state.Path = this.tree.Root.Id;
+        const path = state.Path.split(':');
+        const selectedContext = this.tree.Items.get(state.Path.split(':').pop());
         switch (Actions[action.type as string]) {
-            case Actions.left:
-                selectedContext.Actions.Move.Left();
+            /*case Actions.left:
+                this.tree.Move.Left(path);
                 return {
                     Path: selectedContext.Path.join(':'),
                     Key: selectedContext.Key,
@@ -124,7 +122,7 @@ class SelectionReducer {
                 return {
                     Path: selectedContext.Next.Path.join(':'),
                     Key: selectedContext.Next.Key,
-                };
+                };*/
         }
         return state;
     };
