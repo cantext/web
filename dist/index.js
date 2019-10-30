@@ -100,7 +100,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hypertype_ui__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _model_root__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../model/root */ "./model/root.ts");
+/* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../model/contextTree */ "./model/contextTree.ts");
 /* harmony import */ var _store_selection_store__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../store/selection.store */ "./store/selection.store.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -111,15 +111,6 @@ var __decorate = (undefined && undefined.__decorate) || function (decorators, ta
 var __metadata = (undefined && undefined.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
@@ -129,38 +120,41 @@ let ContextComponent = class ContextComponent extends _hypertype_ui__WEBPACK_IMP
         super();
         this.selectionStore = selectionStore;
         this.root = root;
-        this.contextInitial$ = this.path$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["switchMap"])(ids => this.root.GetContext$(ids)), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Fn"].Ib), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["first"])());
-        this.context$ = this.root.State$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["withLatestFrom"])(this.contextInitial$), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([, context]) => context), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["distinctUntilChanged"])(null, context => `${context.toString()}.${context.Children.map(c => c.Key).join('.')}`), 
-        // tap(context => console.log(`${context.toString()}.${context.Children.map(c => c.Key).join('.')}`)),
-        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["shareReplay"])(1));
+        this.id$ = this.path$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(ids => ids[ids.length - 1]), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["distinctUntilChanged"])(), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["shareReplay"])(1));
+        this.context$ = this.id$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["switchMap"])(id => this.root.Items.get(id).State$), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Fn"].Ib));
         this.IsSelected$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["combineLatest"])([
-            this.selectionStore.asObservable(),
-            this.contextInitial$,
-        ]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([state, context]) => {
-            if (!state || !context)
+            this.root.Cursor.Path$,
+            this.path$,
+        ]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(console.log), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([cursorPath, currentPath]) => {
+            if (!cursorPath || !currentPath)
                 return false;
-            return state.Key == context.Key;
-        }), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["distinctUntilChanged"])(), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["shareReplay"])(1));
+            return cursorPath.join(':') == currentPath.join(':');
+        }), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["distinctUntilChanged"])(), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])((sel) => console.log(sel, this)), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["shareReplay"])(1));
         this.State$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["combineLatest"])([
             this.context$,
+            this.path$,
             this.IsSelected$,
-        ]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([context, isSelected]) => ({
-            context, isSelected,
+        ]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([context, path, isSelected]) => ({
+            context, isSelected, path,
             state: [
                 isSelected ? 'selected' : '',
                 (context.Children.length == 0) ? 'empty' : '',
                 (context.Collapsed) ? 'collapsed' : ''
             ],
         })), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Fn"].Ib));
-        this.Editor$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["combineLatest"])([this.Element$, this.context$]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["first"])(), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([element, context]) => element.querySelector(`#editor${context.Key}`)));
+        this.Editor$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["combineLatest"])([this.Element$, this.context$]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["debounceTime"])(0), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([element, context]) => {
+            const editor = element.querySelector(`.editor`);
+            return editor;
+        }), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Fn"].Ib), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["first"])());
         this.Actions$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["merge"])(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["combineLatest"])([this.IsSelected$, this.Editor$]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(([isSelected, editor]) => {
             if (isSelected && document.activeElement != editor) {
-                console.log('focus', this.path, isSelected);
                 editor.focus();
             }
-        })), this.Events$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(e => e.type == 'focus'), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(({ args }) => __awaiter(this, void 0, void 0, function* () {
-            this.selectionStore.Actions.Path(this.path);
-        })))).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["mapTo"])(null));
+        })), this.Events$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(e => e.type == 'click'), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["withLatestFrom"])(this.path$), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(([, path]) => {
+            this.root.Cursor.SetPath(path);
+        })), this.Events$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(e => e.type == 'text'), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(e => e.args), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["withLatestFrom"])(this.context$), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(([text, context]) => {
+            context.SetText(text);
+        }))).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["mapTo"])(null));
     }
 };
 __decorate([
@@ -177,20 +171,19 @@ ContextComponent = __decorate([
             const context = state.context;
             const isEmpty = state.state.includes('empty');
             const isCollapsed = state.state.includes('collapsed');
-            console.log('render', context.Key, ...context.Children.map(c => c.Key));
             return html `
             <div class="${`context-inner ${state.state.join(' ')}`}">
                 <div class="body">
                     <span class="arrow"></span>
-                    <span id=${`editor${context.Key}`} 
-                          onclick="${events.focus(e => e)}" 
-                          contenteditable="true">
-                        ${context.toString()}
-                    </span>
+                    <div contenteditable="true" class="editor" 
+                          onclick="${events.click(e => e)}"
+                          oninput="${events.text(e => e.target.textContent)}">
+                          ${context.toString()}
+                        </div>
                 </div>
                 <div class="children">
-                ${isCollapsed ? '' : context.Children.map(child => Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"])(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"], `context${child.Key}`) `
-                        <app-context path="${child.Path}"></app-context>
+                ${isCollapsed ? '' : context.Children.map(child => Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"])(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"], `context${child.getKey([...state.path, child.Id])}`) `
+                        <app-context path="${[...state.path, child.Id]}"></app-context>
                     `)}
                 </div>
             </div>
@@ -199,7 +192,7 @@ ContextComponent = __decorate([
         style: __webpack_require__(/*! ./context.style.less */ "./components/context/context.style.less")
     }),
     __metadata("design:paramtypes", [_store_selection_store__WEBPACK_IMPORTED_MODULE_3__["SelectionStore"],
-        _model_root__WEBPACK_IMPORTED_MODULE_2__["Root"]])
+        _model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"]])
 ], ContextComponent);
 
 
@@ -215,7 +208,7 @@ ContextComponent = __decorate([
 
 exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js")(false);
 // Module
-exports.push([module.i, "app-context {\n  display: block;\n  padding: 10px 0;\n}\napp-context .body {\n  box-sizing: border-box;\n  height: 2em;\n}\napp-context .arrow {\n  display: inline-block;\n  width: 1em;\n  text-align: center;\n}\napp-context .context-inner:not(.empty) .arrow:before {\n  content: 'v';\n}\napp-context .context-inner:not(.empty).collapsed .arrow:before {\n  content: '>';\n}\napp-context .context-inner.empty .arrow:before {\n  content: ' ';\n}\napp-context .children {\n  margin-left: 0.5em;\n  margin-top: 0px;\n  padding: 0.5em 0 0 20px;\n  border-left: 0.01em solid #666;\n}\napp-context .empty .children {\n  display: none;\n}\napp-context [contenteditable]:focus {\n  border: none;\n  outline: none;\n}\n", ""]);
+exports.push([module.i, "app-context {\n  display: block;\n  padding: 10px 0;\n}\napp-context .body {\n  box-sizing: border-box;\n  height: 2em;\n  display: flex;\n}\napp-context .arrow {\n  display: inline-block;\n  width: 1em;\n  text-align: center;\n}\napp-context .context-inner:not(.empty) .arrow:before {\n  content: 'v';\n}\napp-context .context-inner:not(.empty).collapsed .arrow:before {\n  content: '>';\n}\napp-context .context-inner.empty .arrow:before {\n  content: ' ';\n}\napp-context .children {\n  margin-left: 0.5em;\n  margin-top: 0px;\n  padding: 0.5em 0 0 20px;\n  border-left: 0.01em solid #666;\n}\napp-context .empty .children {\n  display: none;\n}\napp-context [contenteditable]:focus {\n  border: none;\n  outline: none;\n}\napp-context .editor {\n  -webkit-appearance: none;\n  background: transparent;\n  border: none;\n  font-size: inherit;\n  font-family: inherit;\n  color: inherit;\n  max-width: 100%;\n  display: inline-block;\n  flex: 1;\n}\n", ""]);
 
 
 /***/ }),
@@ -295,7 +288,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "RootComponent", function() { return RootComponent; });
 /* harmony import */ var _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/ui */ "./node_modules/@hypertype/ui/dist/index.js");
 /* harmony import */ var _hypertype_ui__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _model_root__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../model/root */ "./model/root.ts");
+/* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../model/contextTree */ "./model/contextTree.ts");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _store_selection_store__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../store/selection.store */ "./store/selection.store.ts");
@@ -323,22 +316,28 @@ let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_
                 case 'ArrowUp':
                     event.preventDefault();
                     if (event.ctrlKey)
-                        this.selectionStore.Actions.MoveUp();
+                        this.root.Move.Up();
                     else
-                        this.selectionStore.Actions.Prev();
+                        this.root.Cursor.Up();
                     break;
                 case 'ArrowDown':
                     event.preventDefault();
                     if (event.ctrlKey)
-                        this.selectionStore.Actions.MoveDown();
+                        this.root.Move.Down();
                     else
-                        this.selectionStore.Actions.Next();
+                        this.root.Cursor.Down();
+                    break;
+                case 'ArrowLeft':
+                    if (event.ctrlKey)
+                        this.root.Move.Left();
+                    break;
+                case 'ArrowRight':
+                    if (event.ctrlKey)
+                        this.root.Move.Right();
                     break;
                 case 'Tab':
                     event.preventDefault();
-                    event.shiftKey ?
-                        this.selectionStore.Actions.MoveLeft() :
-                        this.selectionStore.Actions.MoveRight();
+                    event.shiftKey ? this.root.Move.Left() : this.root.Move.Right();
                     break;
             }
         })), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keyup').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])(() => {
@@ -350,11 +349,11 @@ RootComponent = __decorate([
     Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["Component"])({
         name: 'app-root',
         template: (html, root) => html `
-        <app-context path="${root.MainContext.Path}"></app-context>
+        <app-context path="${[root.Root.Id]}"></app-context>
     `,
         style: __webpack_require__(/*! ./root.style.less */ "./components/root/root.style.less")
     }),
-    __metadata("design:paramtypes", [_model_root__WEBPACK_IMPORTED_MODULE_1__["Root"],
+    __metadata("design:paramtypes", [_model_contextTree__WEBPACK_IMPORTED_MODULE_1__["ContextTree"],
         _store_selection_store__WEBPACK_IMPORTED_MODULE_3__["SelectionStore"]])
 ], RootComponent);
 
@@ -517,6 +516,166 @@ app.get(_hypertype_app__WEBPACK_IMPORTED_MODULE_0__["RootStore"]).createStore();
 
 /***/ }),
 
+/***/ "./model/base/cursor.ts":
+/*!******************************!*\
+  !*** ./model/base/cursor.ts ***!
+  \******************************/
+/*! exports provided: TreeCursor */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TreeCursor", function() { return TreeCursor; });
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__);
+
+class TreeCursor {
+    constructor(tree) {
+        this.tree = tree;
+        this.Path = [];
+        this.Update = new _hypertype_core__WEBPACK_IMPORTED_MODULE_0__["ReplaySubject"](1);
+        this.Path$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["startWith"])(this.Path), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["debounceTime"])(0), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["shareReplay"])(1));
+    }
+    isRoot(path) {
+        return path.length == 1;
+    }
+    getCurrent(path) {
+        const [currentId] = path.slice(-1);
+        return this.tree.Items.get(currentId);
+    }
+    getParent(path) {
+        const [parentId] = path.slice(-2);
+        return this.tree.Items.get(parentId);
+    }
+    getGrand(path) {
+        const [grandId] = path.slice(-3);
+        return this.tree.Items.get(grandId);
+    }
+    getLeftMove(path = this.Path) {
+        if (path.length < 3)
+            return null;
+        const grand = this.getGrand(path);
+        const parent = this.getParent(path);
+        const parentIndex = grand.Value.Children.indexOf(parent.Id);
+        return {
+            parent: path.slice(0, -2),
+            index: parentIndex + 1
+        };
+    }
+    getRightMove(path = this.Path) {
+        if (this.isRoot(path))
+            return null;
+        const parent = this.getParent(path);
+        const current = this.getCurrent(path);
+        const index = parent.Value.Children.indexOf(current.Id);
+        if (index == 0)
+            return null;
+        const newParent = parent.Children[index - 1];
+        const lastChildId = newParent.Value.Children[newParent.Value.Children.length - 1];
+        return {
+            parent: [
+                ...path.slice(0, -1),
+                newParent.Id,
+            ],
+            index: newParent.Value.Children.length
+        };
+    }
+    getTopMove(path = this.Path) {
+        if (this.isRoot(path))
+            return null;
+        const parent = this.getParent(path);
+        const current = this.getCurrent(path);
+        const index = parent.Value.Children.indexOf(current.Id);
+        if (index > 0)
+            return {
+                parent: path.slice(0, -1),
+                index: index - 1
+            };
+        if (path.length == 2)
+            return null;
+        const grand = this.getGrand(path);
+        const parentIndex = grand.Value.Children.indexOf(parent.Id);
+        return {
+            parent: path.slice(0, -2),
+            index: parentIndex
+        };
+    }
+    getBottomMove(path = this.Path) {
+        if (this.isRoot(path))
+            return null;
+        const [parentId, currentId] = path.slice(-2);
+        const parent = this.tree.Items.get(parentId);
+        const index = parent.Value.Children.indexOf(currentId);
+        if (index < parent.Value.Children.length - 1)
+            return {
+                parent: path.slice(0, -1),
+                index: index + 1
+            };
+        return this.getLeftMove();
+    }
+    SetPath(path) {
+        if (path == null)
+            return;
+        console.log(path);
+        this.Path = path;
+        this.Update.next(this.Path);
+    }
+    Up() {
+        this.SetPath(this.GetUp());
+    }
+    Down() {
+        this.SetPath(this.GetDown());
+    }
+    getLastChild(path) {
+        const current = this.getCurrent(path);
+        if (current.Value.Children.length == 0)
+            return path;
+        return this.getLastChild([
+            ...path,
+            current.Value.Children[current.Value.Children.length - 1]
+        ]);
+    }
+    getNextChild(path) {
+        if (path.length == 1)
+            return null;
+        const [parentId, currentId] = path.slice(-2);
+        const parent = this.tree.Items.get(parentId);
+        const index = parent.Value.Children.indexOf(currentId);
+        if (index < parent.Value.Children.length - 1)
+            return [
+                ...path.slice(0, -1),
+                parent.Value.Children[index + 1]
+            ];
+        return this.getNextChild(path.slice(0, -1));
+    }
+    GetUp(path = this.Path) {
+        if (path.length == 1)
+            return null;
+        const [parentId, currentId] = path.slice(-2);
+        const parent = this.tree.Items.get(parentId);
+        const index = parent.Value.Children.indexOf(currentId);
+        if (index > 0)
+            return this.getLastChild([
+                ...path.slice(0, -1),
+                parent.Value.Children[index - 1]
+            ]);
+        return path.slice(0, -1);
+    }
+    GetDown(path = this.Path) {
+        const current = this.getCurrent(path);
+        if (current.Value.Children.length) {
+            return [
+                ...path,
+                current.Value.Children[0]
+            ];
+        }
+        return this.getNextChild(path);
+    }
+}
+
+
+/***/ }),
+
 /***/ "./model/base/id.ts":
 /*!**************************!*\
   !*** ./model/base/id.ts ***!
@@ -535,112 +694,174 @@ function Id() {
 
 /***/ }),
 
-/***/ "./model/base/tree.ts":
+/***/ "./model/base/leaf.ts":
 /*!****************************!*\
-  !*** ./model/base/tree.ts ***!
+  !*** ./model/base/leaf.ts ***!
   \****************************/
-/*! exports provided: GeneralTree, treeMap */
+/*! exports provided: Leaf */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GeneralTree", function() { return GeneralTree; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "treeMap", function() { return treeMap; });
-class GeneralTree {
-    get this() {
-        return this;
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Leaf", function() { return Leaf; });
+class Leaf {
+    constructor() {
+        // Path: Path<TKey>;
+        this.Parents = new Map();
+        // protected MoveLeft(child: this) {
+        //     const children = this.Children;
+        //     children.indexOf(child);
+        //     const index = this.Parent.Parent.Children.indexOf(this.Parent);
+        //     const grandParent = this.Parent.Parent;
+        //     this.Parent.Children.remove(this.this);
+        //     grandParent.Children.splice(index + 1, 0, this.this);
+        //     this.Path = [...grandParent.Path, this.Id];
+        // }
+        //
+        // protected MoveRight() {
+        //     if (!this.Parent || !this.PrevSibling)
+        //         return;
+        //     const prevSibling = this.PrevSibling;
+        //     this.Parent.Children.remove(this.this);
+        //     prevSibling.Children.push(this.this);
+        //     this.Path = [...prevSibling.Path, this.Id];
+        // }
+        //
+        // protected MoveUp() {
+        //     if (!this.Parent || !this.PrevSibling)
+        //         return;
+        //     const index = this.Parent.Children.indexOf(this.this);
+        //     this.Parent.Children.splice(index - 1, 2, this.this, this.Parent.Children[index - 1]);
+        // }
+        //
+        // protected MoveDown() {
+        //     if (!this.Parent)
+        //         return;
+        //     if (this.NextSibling) {
+        //         const index = this.Parent.Children.indexOf(this.this);
+        //         this.Parent.Children.splice(index, 2, this.Parent.Children[index + 1], this.this);
+        //     } else {
+        //         this.MoveLeft();
+        //     }
+        // }
+        //
+        //
+        // get PrevSibling(): TValue {
+        //     return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) - 1];
+        // }
+        //
+        // get NextSibling(): TValue {
+        //     return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) + 1];
+        // }
+        //
+        // public get Prev(): TValue {
+        //     return this.PrevSibling || this.Parent;
+        // }
+        //
+        // public get Next(): TValue {
+        //     return this.Children[0] || this.NextSibling || (this.Parent && this.Parent.NextSibling);
+        // }
     }
-    flatMap(fn) {
-        return [
-            fn(this.this),
-            ...this.Children.map(c => c.flatMap(fn)).flat()
-        ];
-    }
-    map(fn) {
-        const mapItem = item => {
-            const result = fn(item);
-            result.Children = item.Children
-                .map(mapItem);
-            return result;
-        };
-        return mapItem(this);
-    }
-    forEach(fn) {
-        const forEachItem = item => {
-            fn(item);
-            item.Children.forEach(forEachItem);
-        };
-        forEachItem(this);
-    }
+    // flatMap<U>(fn: (t: TValue) => U) {
+    //     return [
+    //         fn(this.Value),
+    //         ...this.Children.map(c => c.flatMap(fn)).flat()
+    //     ];
+    // }
+    //
+    // map<U extends Leaf<U>>(fn: (t: TValue) => U) {
+    //     const mapItem = item => {
+    //         const result = fn(item);
+    //         result.Children = item.Children
+    //             .map(mapItem);
+    //         return result;
+    //     };
+    //     return mapItem(this);
+    // }
+    //
+    // forEach(fn: (t: TValue) => void | any) {
+    //     const forEachItem = item => {
+    //         fn(item);
+    //         item.Children.forEach(forEachItem);
+    //     };
+    //     forEachItem(this);
+    // }
     get(ids) {
         const [id, ...rest] = ids;
         const child = this.Children.find(c => c.Id == id);
         if (!child)
             return null;
         if (!rest.length)
-            return child.this;
+            return child;
         return child.get(rest);
     }
-    MoveLeft() {
-        if (!this.Parent || !this.Parent.Parent)
-            return;
-        const index = this.Parent.Parent.Children.indexOf(this.Parent);
-        const grandParent = this.Parent.Parent;
-        this.Parent.Children.remove(this.this);
-        grandParent.Children.splice(index + 1, 0, this.this);
-        this.Parent = grandParent;
+    get Children() {
+        return this.Value.Children.map(key => this.tree.Items.get(key));
     }
-    MoveRight() {
-        if (!this.Parent || !this.PrevSibling)
-            return;
-        const prevSibling = this.PrevSibling;
-        this.Parent.Children.remove(this.this);
-        prevSibling.Children.push(this.this);
-        this.Parent = prevSibling;
+    RemoveChild(child) {
+        child.Parents.delete(this.Id);
+        this.Value.Children.remove(child.Id);
     }
-    MoveUp() {
-        if (!this.Parent || !this.PrevSibling)
-            return;
-        const index = this.Parent.Children.indexOf(this.this);
-        this.Parent.Children.splice(index - 1, 2, this.this, this.Parent.Children[index - 1]);
+    InsertAt(child, index) {
+        child.Parents.set(this.Id, this);
+        this.Value.Children.splice(index, 0, child.Id);
     }
-    MoveDown() {
-        if (!this.Parent)
-            return;
-        if (this.NextSibling) {
-            const index = this.Parent.Children.indexOf(this.this);
-            this.Parent.Children.splice(index, 2, this.Parent.Children[index + 1], this.this);
-        }
-        else {
-            this.MoveLeft();
-        }
-    }
-    get PrevSibling() {
-        return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) - 1];
-    }
-    get NextSibling() {
-        return this.Parent && this.Parent.Children[this.Parent.Children.indexOf(this.this) + 1];
-    }
-    get Prev() {
-        return this.PrevSibling || this.Parent;
-    }
-    get Next() {
-        return this.Children[0] || this.NextSibling || (this.Parent && this.Parent.NextSibling);
+    Switch(index1, index2) {
+        const temp = this.Value.Children[index1];
+        this.Value.Children[index1] = this.Value.Children[index2];
+        this.Value.Children[index2] = temp;
     }
 }
-function treeMap(root, children) {
+
+
+/***/ }),
+
+/***/ "./model/base/tree.ts":
+/*!****************************!*\
+  !*** ./model/base/tree.ts ***!
+  \****************************/
+/*! exports provided: Tree */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Tree", function() { return Tree; });
+/* harmony import */ var _cursor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cursor */ "./model/base/cursor.ts");
+
+class Tree {
+    constructor() {
+        this.Cursor = new _cursor__WEBPACK_IMPORTED_MODULE_0__["TreeCursor"](this);
+    }
+    get Leafs() {
+        return Array.from(this.Items.values());
+    }
+    SetParents() {
+        this.Items.forEach(leaf => leaf.Parents = new Map());
+        const parents = this.Leafs
+            .map(parent => parent.Children.map(child => ({ child, parent })))
+            .flat()
+            .groupBy(({ child }) => child);
+        Array.from(parents.entries())
+            .forEach(([child, parents]) => {
+            child.Parents = new Map(parents.map(({ parent }) => [parent.Id, parent]));
+        });
+    }
+}
+/*
+export function treeMap<T>(root: T, children: (t: T) => T[]) {
     return {
-        map: (fn) => {
+        map: <U extends Leaf<U>>(fn: (t: T) => U) => {
             const mapItem = item => {
                 const result = fn(item);
-                result.Children = children(item)
-                    .map(mapItem);
+                result.Path =
+                    result.Children = children(item)
+                        .map(mapItem);
                 result.Children.forEach(child => child.Parent = result);
                 return result;
             };
             return mapItem(root);
         },
-        forEach: (fn) => {
+        forEach: (fn: (t: T) => void | any) => {
             const forEachItem = item => {
                 fn(item);
                 children(item)
@@ -648,8 +869,9 @@ function treeMap(root, children) {
             };
             forEachItem(root);
         }
-    };
+    }
 }
+*/ 
 
 
 /***/ }),
@@ -668,12 +890,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _hypertype_domain__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/domain */ "./node_modules/@hypertype/domain/dist/esm/index.js");
 /* harmony import */ var _hypertype_domain__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_domain__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _root__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./root */ "./model/root.ts");
+/* harmony import */ var _contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./contextTree */ "./model/contextTree.ts");
 
 
 
-const root = new _root__WEBPACK_IMPORTED_MODULE_2__["Root"]();
-const ContextDomainContainer = _hypertype_core__WEBPACK_IMPORTED_MODULE_0__["Container"].withProviders({ provide: _hypertype_domain__WEBPACK_IMPORTED_MODULE_1__["Model"], useValue: root }, { provide: _root__WEBPACK_IMPORTED_MODULE_2__["Root"], useValue: root }, _hypertype_domain__WEBPACK_IMPORTED_MODULE_1__["ProxyDomainContainer"]);
+const root = new _contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"]();
+const ContextDomainContainer = _hypertype_core__WEBPACK_IMPORTED_MODULE_0__["Container"].withProviders({ provide: _hypertype_domain__WEBPACK_IMPORTED_MODULE_1__["Model"], useValue: root }, { provide: _contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"], useValue: root }, _hypertype_domain__WEBPACK_IMPORTED_MODULE_1__["ProxyDomainContainer"]);
 
 
 /***/ }),
@@ -688,56 +910,168 @@ const ContextDomainContainer = _hypertype_core__WEBPACK_IMPORTED_MODULE_0__["Con
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Context", function() { return Context; });
-/* harmony import */ var _base_tree__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./base/tree */ "./model/base/tree.ts");
-/* harmony import */ var _base_id__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/id */ "./model/base/id.ts");
+/* harmony import */ var _base_id__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./base/id */ "./model/base/id.ts");
+/* harmony import */ var _base_leaf__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/leaf */ "./model/base/leaf.ts");
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/index.js");
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(rxjs__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__);
 
 
-class Context extends _base_tree__WEBPACK_IMPORTED_MODULE_0__["GeneralTree"] {
-    constructor(root, dbo) {
+
+
+class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
+    constructor(tree, dbo) {
         super();
-        this.root = root;
-        this.Children = [];
         this.Users = new Map();
         this.Collapsed = false;
-        this.Key = Object(_base_id__WEBPACK_IMPORTED_MODULE_1__["Id"])();
-        this.Actions = {
-            Move: {
-                Left: () => {
-                    this.MoveLeft();
-                    this.root.Update.next();
-                },
-                Right: () => {
-                    this.MoveRight();
-                    this.root.Update.next();
-                },
-                Down: () => {
-                    this.MoveDown();
-                    this.root.Update.next();
-                },
-                Up: () => {
-                    this.MoveUp();
-                    this.root.Update.next();
-                }
-            }
-        };
-        this.Data = dbo;
+        // public get Path() {
+        //     if (!this.Parent)
+        //         return [this.Id];
+        //     return [...this.Parent.Path, this.Id];
+        // }
+        this._pathToKey = {};
+        this.Update = new rxjs__WEBPACK_IMPORTED_MODULE_2__["ReplaySubject"](1);
+        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["startWith"])(null), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["debounceTime"])(0), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["tap"])(console.log), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["shareReplay"])(1));
+        this.tree = tree;
+        this.Value = dbo;
+    }
+    SetText(text) {
+        this.Value.Content[0].Text = text;
+        this.Update.next();
     }
     GetDbo() {
         return [
-            this.Data,
+            this.Value,
             ...this.Children.map(child => child.GetDbo())
         ].distinct(dbo => dbo.Id);
     }
     toString() {
-        return this.Data.Content.map(t => t['Text']).join(' ');
+        return this.Value.Content.map(t => t['Text']).join(' ');
     }
     get Id() {
-        return this.Data.Id;
+        return this.Value.Id;
     }
-    get Path() {
-        if (!this.Parent)
-            return [this.Id];
-        return [...this.Parent.Path, this.Id];
+    getKey(path) {
+        const str = path.join(':');
+        if (!this._pathToKey[str])
+            this._pathToKey[str] = Object(_base_id__WEBPACK_IMPORTED_MODULE_0__["Id"])();
+        return this._pathToKey[str];
+    }
+    Move(from, { parent: to, index }) {
+        const oldParentId = from[from.length - 1];
+        const newParentId = to[to.length - 1];
+        const oldParent = this.tree.Items.get(oldParentId);
+        const newParent = this.tree.Items.get(newParentId);
+        Object.keys(this._pathToKey).forEach(oldPath => {
+            const newPath = oldPath.replace(`:${oldParentId}:`, `:${newParentId}:`);
+            this._pathToKey[newPath] = this._pathToKey[oldPath];
+            delete this._pathToKey[oldPath];
+        });
+        this._pathToKey[[...to, this.Id].join(':')] = this._pathToKey[[...from, this.Id].join(':')];
+        oldParent.RemoveChild(this);
+        newParent.InsertAt(this, index);
+        newParent.Update.next();
+        oldParent.Update.next();
+        this.Update.next();
+    }
+}
+
+
+/***/ }),
+
+/***/ "./model/contextTree.ts":
+/*!******************************!*\
+  !*** ./model/contextTree.ts ***!
+  \******************************/
+/*! exports provided: ContextTree */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ContextTree", function() { return ContextTree; });
+/* harmony import */ var _dbo_default__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dbo/default */ "./model/dbo/default.ts");
+/* harmony import */ var _base_tree__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/tree */ "./model/base/tree.ts");
+/* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./context */ "./model/context.ts");
+/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./user */ "./model/user.ts");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__);
+
+
+
+
+
+class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_1__["Tree"] {
+    constructor(dbo = Object(_dbo_default__WEBPACK_IMPORTED_MODULE_0__["DefaultData"])()) {
+        super();
+        this.Update = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
+        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["debounceTime"])(0), 
+        // tap(() => {
+        //     console.log(...this.Root.flatMap(t => t.Path));
+        // }),
+        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["shareReplay"])(1));
+        this.Move = {
+            Left: () => {
+                const id = this.Cursor.Path[this.Cursor.Path.length - 1];
+                const target = this.Cursor.getLeftMove();
+                if (!target)
+                    return;
+                this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+                this.Cursor.SetPath([...target.parent, id]);
+            },
+            Right: () => {
+                const id = this.Cursor.Path[this.Cursor.Path.length - 1];
+                const target = this.Cursor.getRightMove();
+                if (!target)
+                    return;
+                this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+                this.Cursor.SetPath([...target.parent, id]);
+            },
+            Down: () => {
+                const id = this.Cursor.Path[this.Cursor.Path.length - 1];
+                const target = this.Cursor.getBottomMove();
+                if (!target)
+                    return;
+                this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+                this.Cursor.SetPath([...target.parent, id]);
+            },
+            Up: () => {
+                const id = this.Cursor.Path[this.Cursor.Path.length - 1];
+                const target = this.Cursor.getTopMove();
+                if (!target)
+                    return;
+                this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+                this.Cursor.SetPath([...target.parent, id]);
+            }
+        };
+        window['root'] = this;
+        this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new _user__WEBPACK_IMPORTED_MODULE_3__["User"](userDbo)]));
+        // const mainContextDbo = dbo.Contexts.find(c => c.Parents.length == 0);
+        // const contextDboTree = treeMap<ContextDbo>(mainContextDbo, item => dbo.Contexts
+        //     .filter(c => c.Parents.includes(item.Id)));
+        // this.Root = contextDboTree.map(t => new Context(this, t));
+        this.Items = new Map(dbo.Contexts
+            .map(dbo => [dbo.Id, new _context__WEBPACK_IMPORTED_MODULE_2__["Context"](this, dbo)]));
+        this.Root = this.Items.get(dbo.Root);
+        this.SetParents();
+        dbo.Relations.forEach(relation => {
+            const context = this.Items.get(relation.ContextId);
+            const user = this.UserMap.get(relation.UserId);
+            user.Contexts.set(context, relation.Type);
+            context.Users.set(user, relation.Type);
+        });
+        Object.entries(dbo.UserState.ContextsState)
+            .forEach(([key, state]) => {
+            const context = this.Items.get(key);
+            context.Collapsed = state.Collapsed;
+        });
+        this.Update.next();
+    }
+    get Parent() {
+        return null;
+    }
+    get Children() {
+        return [this.Root];
     }
 }
 
@@ -777,18 +1111,17 @@ var RelationType;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DefaultData", function() { return DefaultData; });
 /* harmony import */ var _context_dbo__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./context.dbo */ "./model/dbo/context.dbo.ts");
-/* harmony import */ var _base_id__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../base/id */ "./model/base/id.ts");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__);
-
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
 
 
 const InititalData = () => ({
+    Root: '1',
     Contexts: [
         {
-            Id: Object(_base_id__WEBPACK_IMPORTED_MODULE_1__["Id"])(),
-            ParentIds: [],
-            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["utc"])().toISO(),
+            Id: '1',
+            Children: [],
+            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["utc"])().toISO(),
             Content: [{
                     Text: '...',
                 }]
@@ -801,43 +1134,44 @@ const InititalData = () => ({
     }
 });
 const DefaultDataTest1 = () => ({
+    Root: '1',
     Contexts: [
         {
             Id: '1',
-            ParentIds: [],
-            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["utc"])().toISO(),
+            Children: ['1.1', '1.2'],
+            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["utc"])().toISO(),
             Content: [{
                     Text: '1 Контекст',
                 }]
         },
         {
             Id: '1.1',
-            ParentIds: ['1'],
-            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["utc"])().toISO(),
+            Children: ['1.2'],
+            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["utc"])().toISO(),
             Content: [{
                     Text: '1.1 Пример использования',
                 }]
         },
         {
             Id: '1.2',
-            ParentIds: ['1'],
-            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["utc"])().toISO(),
+            Children: ['1.2.1', '1.2.2'],
+            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["utc"])().toISO(),
             Content: [{
                     Text: '1.2 Проектировани',
                 }]
         },
         {
             Id: '1.2.1',
-            ParentIds: ['1.2'],
-            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["utc"])().toISO(),
+            Children: [],
+            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["utc"])().toISO(),
             Content: [{
                     Text: '1.2.1 Сущности',
                 }]
         },
         {
             Id: '1.2.2',
-            ParentIds: ['1.2'],
-            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["utc"])().toISO(),
+            Children: [],
+            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["utc"])().toISO(),
             Content: [{
                     Text: '1.2.2 Поведение',
                 }]
@@ -882,70 +1216,6 @@ const DefaultDataTest1 = () => ({
     }
 });
 const DefaultData = DefaultDataTest1;
-
-
-/***/ }),
-
-/***/ "./model/root.ts":
-/*!***********************!*\
-  !*** ./model/root.ts ***!
-  \***********************/
-/*! exports provided: Root */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Root", function() { return Root; });
-/* harmony import */ var _dbo_default__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dbo/default */ "./model/dbo/default.ts");
-/* harmony import */ var _base_tree__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/tree */ "./model/base/tree.ts");
-/* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./context */ "./model/context.ts");
-/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./user */ "./model/user.ts");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__);
-
-
-
-
-
-class Root extends _base_tree__WEBPACK_IMPORTED_MODULE_1__["GeneralTree"] {
-    constructor(dbo = Object(_dbo_default__WEBPACK_IMPORTED_MODULE_0__["DefaultData"])()) {
-        super();
-        this.Update = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
-        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["debounceTime"])(0), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["tap"])(() => {
-            console.log(...this.MainContext.flatMap(t => t.Path));
-        }), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["shareReplay"])(1));
-        window['root'] = this;
-        this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new _user__WEBPACK_IMPORTED_MODULE_3__["User"](userDbo)]));
-        const mainContextDbo = dbo.Contexts.find(c => c.ParentIds.length == 0);
-        const contextDboTree = Object(_base_tree__WEBPACK_IMPORTED_MODULE_1__["treeMap"])(mainContextDbo, item => dbo.Contexts
-            .filter(c => c.ParentIds.includes(item.Id)));
-        this.MainContext = contextDboTree.map(t => new _context__WEBPACK_IMPORTED_MODULE_2__["Context"](this, t));
-        this.ContextMap = this.MainContext
-            .flatMap(c => c)
-            .groupBy(c => c.Id);
-        dbo.Relations.forEach(relation => {
-            const contexts = this.ContextMap.get(relation.ContextId);
-            const user = this.UserMap.get(relation.UserId);
-            contexts.forEach(context => {
-                user.Contexts.set(context, relation.Type);
-                context.Users.set(user, relation.Type);
-            });
-        });
-        for (const key in dbo.UserState.ContextsState) {
-            const state = dbo.UserState.ContextsState[key];
-            for (const context of this.ContextMap.get(key)) {
-                context.Collapsed = state.Collapsed;
-            }
-        }
-        this.Update.next();
-    }
-    get Children() {
-        return [this.MainContext];
-    }
-    GetContext$(ids) {
-        return this.State$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["map"])(root => root.get(ids)));
-    }
-}
 
 
 /***/ }),
@@ -22426,6 +22696,203 @@ exports.default = createRouter;
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/index.js":
+/*!************************************!*\
+  !*** ./node_modules/rxjs/index.js ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ./internal/Observable */ "./node_modules/rxjs/internal/Observable.js");
+exports.Observable = Observable_1.Observable;
+var ConnectableObservable_1 = __webpack_require__(/*! ./internal/observable/ConnectableObservable */ "./node_modules/rxjs/internal/observable/ConnectableObservable.js");
+exports.ConnectableObservable = ConnectableObservable_1.ConnectableObservable;
+var groupBy_1 = __webpack_require__(/*! ./internal/operators/groupBy */ "./node_modules/rxjs/internal/operators/groupBy.js");
+exports.GroupedObservable = groupBy_1.GroupedObservable;
+var observable_1 = __webpack_require__(/*! ./internal/symbol/observable */ "./node_modules/rxjs/internal/symbol/observable.js");
+exports.observable = observable_1.observable;
+var Subject_1 = __webpack_require__(/*! ./internal/Subject */ "./node_modules/rxjs/internal/Subject.js");
+exports.Subject = Subject_1.Subject;
+var BehaviorSubject_1 = __webpack_require__(/*! ./internal/BehaviorSubject */ "./node_modules/rxjs/internal/BehaviorSubject.js");
+exports.BehaviorSubject = BehaviorSubject_1.BehaviorSubject;
+var ReplaySubject_1 = __webpack_require__(/*! ./internal/ReplaySubject */ "./node_modules/rxjs/internal/ReplaySubject.js");
+exports.ReplaySubject = ReplaySubject_1.ReplaySubject;
+var AsyncSubject_1 = __webpack_require__(/*! ./internal/AsyncSubject */ "./node_modules/rxjs/internal/AsyncSubject.js");
+exports.AsyncSubject = AsyncSubject_1.AsyncSubject;
+var asap_1 = __webpack_require__(/*! ./internal/scheduler/asap */ "./node_modules/rxjs/internal/scheduler/asap.js");
+exports.asapScheduler = asap_1.asap;
+var async_1 = __webpack_require__(/*! ./internal/scheduler/async */ "./node_modules/rxjs/internal/scheduler/async.js");
+exports.asyncScheduler = async_1.async;
+var queue_1 = __webpack_require__(/*! ./internal/scheduler/queue */ "./node_modules/rxjs/internal/scheduler/queue.js");
+exports.queueScheduler = queue_1.queue;
+var animationFrame_1 = __webpack_require__(/*! ./internal/scheduler/animationFrame */ "./node_modules/rxjs/internal/scheduler/animationFrame.js");
+exports.animationFrameScheduler = animationFrame_1.animationFrame;
+var VirtualTimeScheduler_1 = __webpack_require__(/*! ./internal/scheduler/VirtualTimeScheduler */ "./node_modules/rxjs/internal/scheduler/VirtualTimeScheduler.js");
+exports.VirtualTimeScheduler = VirtualTimeScheduler_1.VirtualTimeScheduler;
+exports.VirtualAction = VirtualTimeScheduler_1.VirtualAction;
+var Scheduler_1 = __webpack_require__(/*! ./internal/Scheduler */ "./node_modules/rxjs/internal/Scheduler.js");
+exports.Scheduler = Scheduler_1.Scheduler;
+var Subscription_1 = __webpack_require__(/*! ./internal/Subscription */ "./node_modules/rxjs/internal/Subscription.js");
+exports.Subscription = Subscription_1.Subscription;
+var Subscriber_1 = __webpack_require__(/*! ./internal/Subscriber */ "./node_modules/rxjs/internal/Subscriber.js");
+exports.Subscriber = Subscriber_1.Subscriber;
+var Notification_1 = __webpack_require__(/*! ./internal/Notification */ "./node_modules/rxjs/internal/Notification.js");
+exports.Notification = Notification_1.Notification;
+exports.NotificationKind = Notification_1.NotificationKind;
+var pipe_1 = __webpack_require__(/*! ./internal/util/pipe */ "./node_modules/rxjs/internal/util/pipe.js");
+exports.pipe = pipe_1.pipe;
+var noop_1 = __webpack_require__(/*! ./internal/util/noop */ "./node_modules/rxjs/internal/util/noop.js");
+exports.noop = noop_1.noop;
+var identity_1 = __webpack_require__(/*! ./internal/util/identity */ "./node_modules/rxjs/internal/util/identity.js");
+exports.identity = identity_1.identity;
+var isObservable_1 = __webpack_require__(/*! ./internal/util/isObservable */ "./node_modules/rxjs/internal/util/isObservable.js");
+exports.isObservable = isObservable_1.isObservable;
+var ArgumentOutOfRangeError_1 = __webpack_require__(/*! ./internal/util/ArgumentOutOfRangeError */ "./node_modules/rxjs/internal/util/ArgumentOutOfRangeError.js");
+exports.ArgumentOutOfRangeError = ArgumentOutOfRangeError_1.ArgumentOutOfRangeError;
+var EmptyError_1 = __webpack_require__(/*! ./internal/util/EmptyError */ "./node_modules/rxjs/internal/util/EmptyError.js");
+exports.EmptyError = EmptyError_1.EmptyError;
+var ObjectUnsubscribedError_1 = __webpack_require__(/*! ./internal/util/ObjectUnsubscribedError */ "./node_modules/rxjs/internal/util/ObjectUnsubscribedError.js");
+exports.ObjectUnsubscribedError = ObjectUnsubscribedError_1.ObjectUnsubscribedError;
+var UnsubscriptionError_1 = __webpack_require__(/*! ./internal/util/UnsubscriptionError */ "./node_modules/rxjs/internal/util/UnsubscriptionError.js");
+exports.UnsubscriptionError = UnsubscriptionError_1.UnsubscriptionError;
+var TimeoutError_1 = __webpack_require__(/*! ./internal/util/TimeoutError */ "./node_modules/rxjs/internal/util/TimeoutError.js");
+exports.TimeoutError = TimeoutError_1.TimeoutError;
+var bindCallback_1 = __webpack_require__(/*! ./internal/observable/bindCallback */ "./node_modules/rxjs/internal/observable/bindCallback.js");
+exports.bindCallback = bindCallback_1.bindCallback;
+var bindNodeCallback_1 = __webpack_require__(/*! ./internal/observable/bindNodeCallback */ "./node_modules/rxjs/internal/observable/bindNodeCallback.js");
+exports.bindNodeCallback = bindNodeCallback_1.bindNodeCallback;
+var combineLatest_1 = __webpack_require__(/*! ./internal/observable/combineLatest */ "./node_modules/rxjs/internal/observable/combineLatest.js");
+exports.combineLatest = combineLatest_1.combineLatest;
+var concat_1 = __webpack_require__(/*! ./internal/observable/concat */ "./node_modules/rxjs/internal/observable/concat.js");
+exports.concat = concat_1.concat;
+var defer_1 = __webpack_require__(/*! ./internal/observable/defer */ "./node_modules/rxjs/internal/observable/defer.js");
+exports.defer = defer_1.defer;
+var empty_1 = __webpack_require__(/*! ./internal/observable/empty */ "./node_modules/rxjs/internal/observable/empty.js");
+exports.empty = empty_1.empty;
+var forkJoin_1 = __webpack_require__(/*! ./internal/observable/forkJoin */ "./node_modules/rxjs/internal/observable/forkJoin.js");
+exports.forkJoin = forkJoin_1.forkJoin;
+var from_1 = __webpack_require__(/*! ./internal/observable/from */ "./node_modules/rxjs/internal/observable/from.js");
+exports.from = from_1.from;
+var fromEvent_1 = __webpack_require__(/*! ./internal/observable/fromEvent */ "./node_modules/rxjs/internal/observable/fromEvent.js");
+exports.fromEvent = fromEvent_1.fromEvent;
+var fromEventPattern_1 = __webpack_require__(/*! ./internal/observable/fromEventPattern */ "./node_modules/rxjs/internal/observable/fromEventPattern.js");
+exports.fromEventPattern = fromEventPattern_1.fromEventPattern;
+var generate_1 = __webpack_require__(/*! ./internal/observable/generate */ "./node_modules/rxjs/internal/observable/generate.js");
+exports.generate = generate_1.generate;
+var iif_1 = __webpack_require__(/*! ./internal/observable/iif */ "./node_modules/rxjs/internal/observable/iif.js");
+exports.iif = iif_1.iif;
+var interval_1 = __webpack_require__(/*! ./internal/observable/interval */ "./node_modules/rxjs/internal/observable/interval.js");
+exports.interval = interval_1.interval;
+var merge_1 = __webpack_require__(/*! ./internal/observable/merge */ "./node_modules/rxjs/internal/observable/merge.js");
+exports.merge = merge_1.merge;
+var never_1 = __webpack_require__(/*! ./internal/observable/never */ "./node_modules/rxjs/internal/observable/never.js");
+exports.never = never_1.never;
+var of_1 = __webpack_require__(/*! ./internal/observable/of */ "./node_modules/rxjs/internal/observable/of.js");
+exports.of = of_1.of;
+var onErrorResumeNext_1 = __webpack_require__(/*! ./internal/observable/onErrorResumeNext */ "./node_modules/rxjs/internal/observable/onErrorResumeNext.js");
+exports.onErrorResumeNext = onErrorResumeNext_1.onErrorResumeNext;
+var pairs_1 = __webpack_require__(/*! ./internal/observable/pairs */ "./node_modules/rxjs/internal/observable/pairs.js");
+exports.pairs = pairs_1.pairs;
+var partition_1 = __webpack_require__(/*! ./internal/observable/partition */ "./node_modules/rxjs/internal/observable/partition.js");
+exports.partition = partition_1.partition;
+var race_1 = __webpack_require__(/*! ./internal/observable/race */ "./node_modules/rxjs/internal/observable/race.js");
+exports.race = race_1.race;
+var range_1 = __webpack_require__(/*! ./internal/observable/range */ "./node_modules/rxjs/internal/observable/range.js");
+exports.range = range_1.range;
+var throwError_1 = __webpack_require__(/*! ./internal/observable/throwError */ "./node_modules/rxjs/internal/observable/throwError.js");
+exports.throwError = throwError_1.throwError;
+var timer_1 = __webpack_require__(/*! ./internal/observable/timer */ "./node_modules/rxjs/internal/observable/timer.js");
+exports.timer = timer_1.timer;
+var using_1 = __webpack_require__(/*! ./internal/observable/using */ "./node_modules/rxjs/internal/observable/using.js");
+exports.using = using_1.using;
+var zip_1 = __webpack_require__(/*! ./internal/observable/zip */ "./node_modules/rxjs/internal/observable/zip.js");
+exports.zip = zip_1.zip;
+var scheduled_1 = __webpack_require__(/*! ./internal/scheduled/scheduled */ "./node_modules/rxjs/internal/scheduled/scheduled.js");
+exports.scheduled = scheduled_1.scheduled;
+var empty_2 = __webpack_require__(/*! ./internal/observable/empty */ "./node_modules/rxjs/internal/observable/empty.js");
+exports.EMPTY = empty_2.EMPTY;
+var never_2 = __webpack_require__(/*! ./internal/observable/never */ "./node_modules/rxjs/internal/observable/never.js");
+exports.NEVER = never_2.NEVER;
+var config_1 = __webpack_require__(/*! ./internal/config */ "./node_modules/rxjs/internal/config.js");
+exports.config = config_1.config;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/AsyncSubject.js":
+/*!****************************************************!*\
+  !*** ./node_modules/rxjs/internal/AsyncSubject.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var Subject_1 = __webpack_require__(/*! ./Subject */ "./node_modules/rxjs/internal/Subject.js");
+var Subscription_1 = __webpack_require__(/*! ./Subscription */ "./node_modules/rxjs/internal/Subscription.js");
+var AsyncSubject = (function (_super) {
+    __extends(AsyncSubject, _super);
+    function AsyncSubject() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.value = null;
+        _this.hasNext = false;
+        _this.hasCompleted = false;
+        return _this;
+    }
+    AsyncSubject.prototype._subscribe = function (subscriber) {
+        if (this.hasError) {
+            subscriber.error(this.thrownError);
+            return Subscription_1.Subscription.EMPTY;
+        }
+        else if (this.hasCompleted && this.hasNext) {
+            subscriber.next(this.value);
+            subscriber.complete();
+            return Subscription_1.Subscription.EMPTY;
+        }
+        return _super.prototype._subscribe.call(this, subscriber);
+    };
+    AsyncSubject.prototype.next = function (value) {
+        if (!this.hasCompleted) {
+            this.value = value;
+            this.hasNext = true;
+        }
+    };
+    AsyncSubject.prototype.error = function (error) {
+        if (!this.hasCompleted) {
+            _super.prototype.error.call(this, error);
+        }
+    };
+    AsyncSubject.prototype.complete = function () {
+        this.hasCompleted = true;
+        if (this.hasNext) {
+            _super.prototype.next.call(this, this.value);
+        }
+        _super.prototype.complete.call(this);
+    };
+    return AsyncSubject;
+}(Subject_1.Subject));
+exports.AsyncSubject = AsyncSubject;
+//# sourceMappingURL=AsyncSubject.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/BehaviorSubject.js":
 /*!*******************************************************!*\
   !*** ./node_modules/rxjs/internal/BehaviorSubject.js ***!
@@ -23674,6 +24141,416 @@ exports.config = {
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/observable/ConnectableObservable.js":
+/*!************************************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/ConnectableObservable.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var Subject_1 = __webpack_require__(/*! ../Subject */ "./node_modules/rxjs/internal/Subject.js");
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var Subscriber_1 = __webpack_require__(/*! ../Subscriber */ "./node_modules/rxjs/internal/Subscriber.js");
+var Subscription_1 = __webpack_require__(/*! ../Subscription */ "./node_modules/rxjs/internal/Subscription.js");
+var refCount_1 = __webpack_require__(/*! ../operators/refCount */ "./node_modules/rxjs/internal/operators/refCount.js");
+var ConnectableObservable = (function (_super) {
+    __extends(ConnectableObservable, _super);
+    function ConnectableObservable(source, subjectFactory) {
+        var _this = _super.call(this) || this;
+        _this.source = source;
+        _this.subjectFactory = subjectFactory;
+        _this._refCount = 0;
+        _this._isComplete = false;
+        return _this;
+    }
+    ConnectableObservable.prototype._subscribe = function (subscriber) {
+        return this.getSubject().subscribe(subscriber);
+    };
+    ConnectableObservable.prototype.getSubject = function () {
+        var subject = this._subject;
+        if (!subject || subject.isStopped) {
+            this._subject = this.subjectFactory();
+        }
+        return this._subject;
+    };
+    ConnectableObservable.prototype.connect = function () {
+        var connection = this._connection;
+        if (!connection) {
+            this._isComplete = false;
+            connection = this._connection = new Subscription_1.Subscription();
+            connection.add(this.source
+                .subscribe(new ConnectableSubscriber(this.getSubject(), this)));
+            if (connection.closed) {
+                this._connection = null;
+                connection = Subscription_1.Subscription.EMPTY;
+            }
+        }
+        return connection;
+    };
+    ConnectableObservable.prototype.refCount = function () {
+        return refCount_1.refCount()(this);
+    };
+    return ConnectableObservable;
+}(Observable_1.Observable));
+exports.ConnectableObservable = ConnectableObservable;
+exports.connectableObservableDescriptor = (function () {
+    var connectableProto = ConnectableObservable.prototype;
+    return {
+        operator: { value: null },
+        _refCount: { value: 0, writable: true },
+        _subject: { value: null, writable: true },
+        _connection: { value: null, writable: true },
+        _subscribe: { value: connectableProto._subscribe },
+        _isComplete: { value: connectableProto._isComplete, writable: true },
+        getSubject: { value: connectableProto.getSubject },
+        connect: { value: connectableProto.connect },
+        refCount: { value: connectableProto.refCount }
+    };
+})();
+var ConnectableSubscriber = (function (_super) {
+    __extends(ConnectableSubscriber, _super);
+    function ConnectableSubscriber(destination, connectable) {
+        var _this = _super.call(this, destination) || this;
+        _this.connectable = connectable;
+        return _this;
+    }
+    ConnectableSubscriber.prototype._error = function (err) {
+        this._unsubscribe();
+        _super.prototype._error.call(this, err);
+    };
+    ConnectableSubscriber.prototype._complete = function () {
+        this.connectable._isComplete = true;
+        this._unsubscribe();
+        _super.prototype._complete.call(this);
+    };
+    ConnectableSubscriber.prototype._unsubscribe = function () {
+        var connectable = this.connectable;
+        if (connectable) {
+            this.connectable = null;
+            var connection = connectable._connection;
+            connectable._refCount = 0;
+            connectable._subject = null;
+            connectable._connection = null;
+            if (connection) {
+                connection.unsubscribe();
+            }
+        }
+    };
+    return ConnectableSubscriber;
+}(Subject_1.SubjectSubscriber));
+var RefCountOperator = (function () {
+    function RefCountOperator(connectable) {
+        this.connectable = connectable;
+    }
+    RefCountOperator.prototype.call = function (subscriber, source) {
+        var connectable = this.connectable;
+        connectable._refCount++;
+        var refCounter = new RefCountSubscriber(subscriber, connectable);
+        var subscription = source.subscribe(refCounter);
+        if (!refCounter.closed) {
+            refCounter.connection = connectable.connect();
+        }
+        return subscription;
+    };
+    return RefCountOperator;
+}());
+var RefCountSubscriber = (function (_super) {
+    __extends(RefCountSubscriber, _super);
+    function RefCountSubscriber(destination, connectable) {
+        var _this = _super.call(this, destination) || this;
+        _this.connectable = connectable;
+        return _this;
+    }
+    RefCountSubscriber.prototype._unsubscribe = function () {
+        var connectable = this.connectable;
+        if (!connectable) {
+            this.connection = null;
+            return;
+        }
+        this.connectable = null;
+        var refCount = connectable._refCount;
+        if (refCount <= 0) {
+            this.connection = null;
+            return;
+        }
+        connectable._refCount = refCount - 1;
+        if (refCount > 1) {
+            this.connection = null;
+            return;
+        }
+        var connection = this.connection;
+        var sharedConnection = connectable._connection;
+        this.connection = null;
+        if (sharedConnection && (!connection || sharedConnection === connection)) {
+            sharedConnection.unsubscribe();
+        }
+    };
+    return RefCountSubscriber;
+}(Subscriber_1.Subscriber));
+//# sourceMappingURL=ConnectableObservable.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/bindCallback.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/bindCallback.js ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var AsyncSubject_1 = __webpack_require__(/*! ../AsyncSubject */ "./node_modules/rxjs/internal/AsyncSubject.js");
+var map_1 = __webpack_require__(/*! ../operators/map */ "./node_modules/rxjs/internal/operators/map.js");
+var canReportError_1 = __webpack_require__(/*! ../util/canReportError */ "./node_modules/rxjs/internal/util/canReportError.js");
+var isArray_1 = __webpack_require__(/*! ../util/isArray */ "./node_modules/rxjs/internal/util/isArray.js");
+var isScheduler_1 = __webpack_require__(/*! ../util/isScheduler */ "./node_modules/rxjs/internal/util/isScheduler.js");
+function bindCallback(callbackFunc, resultSelector, scheduler) {
+    if (resultSelector) {
+        if (isScheduler_1.isScheduler(resultSelector)) {
+            scheduler = resultSelector;
+        }
+        else {
+            return function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                return bindCallback(callbackFunc, scheduler).apply(void 0, args).pipe(map_1.map(function (args) { return isArray_1.isArray(args) ? resultSelector.apply(void 0, args) : resultSelector(args); }));
+            };
+        }
+    }
+    return function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var context = this;
+        var subject;
+        var params = {
+            context: context,
+            subject: subject,
+            callbackFunc: callbackFunc,
+            scheduler: scheduler,
+        };
+        return new Observable_1.Observable(function (subscriber) {
+            if (!scheduler) {
+                if (!subject) {
+                    subject = new AsyncSubject_1.AsyncSubject();
+                    var handler = function () {
+                        var innerArgs = [];
+                        for (var _i = 0; _i < arguments.length; _i++) {
+                            innerArgs[_i] = arguments[_i];
+                        }
+                        subject.next(innerArgs.length <= 1 ? innerArgs[0] : innerArgs);
+                        subject.complete();
+                    };
+                    try {
+                        callbackFunc.apply(context, args.concat([handler]));
+                    }
+                    catch (err) {
+                        if (canReportError_1.canReportError(subject)) {
+                            subject.error(err);
+                        }
+                        else {
+                            console.warn(err);
+                        }
+                    }
+                }
+                return subject.subscribe(subscriber);
+            }
+            else {
+                var state = {
+                    args: args, subscriber: subscriber, params: params,
+                };
+                return scheduler.schedule(dispatch, 0, state);
+            }
+        });
+    };
+}
+exports.bindCallback = bindCallback;
+function dispatch(state) {
+    var _this = this;
+    var self = this;
+    var args = state.args, subscriber = state.subscriber, params = state.params;
+    var callbackFunc = params.callbackFunc, context = params.context, scheduler = params.scheduler;
+    var subject = params.subject;
+    if (!subject) {
+        subject = params.subject = new AsyncSubject_1.AsyncSubject();
+        var handler = function () {
+            var innerArgs = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                innerArgs[_i] = arguments[_i];
+            }
+            var value = innerArgs.length <= 1 ? innerArgs[0] : innerArgs;
+            _this.add(scheduler.schedule(dispatchNext, 0, { value: value, subject: subject }));
+        };
+        try {
+            callbackFunc.apply(context, args.concat([handler]));
+        }
+        catch (err) {
+            subject.error(err);
+        }
+    }
+    this.add(subject.subscribe(subscriber));
+}
+function dispatchNext(state) {
+    var value = state.value, subject = state.subject;
+    subject.next(value);
+    subject.complete();
+}
+function dispatchError(state) {
+    var err = state.err, subject = state.subject;
+    subject.error(err);
+}
+//# sourceMappingURL=bindCallback.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/bindNodeCallback.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/bindNodeCallback.js ***!
+  \*******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var AsyncSubject_1 = __webpack_require__(/*! ../AsyncSubject */ "./node_modules/rxjs/internal/AsyncSubject.js");
+var map_1 = __webpack_require__(/*! ../operators/map */ "./node_modules/rxjs/internal/operators/map.js");
+var canReportError_1 = __webpack_require__(/*! ../util/canReportError */ "./node_modules/rxjs/internal/util/canReportError.js");
+var isScheduler_1 = __webpack_require__(/*! ../util/isScheduler */ "./node_modules/rxjs/internal/util/isScheduler.js");
+var isArray_1 = __webpack_require__(/*! ../util/isArray */ "./node_modules/rxjs/internal/util/isArray.js");
+function bindNodeCallback(callbackFunc, resultSelector, scheduler) {
+    if (resultSelector) {
+        if (isScheduler_1.isScheduler(resultSelector)) {
+            scheduler = resultSelector;
+        }
+        else {
+            return function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                return bindNodeCallback(callbackFunc, scheduler).apply(void 0, args).pipe(map_1.map(function (args) { return isArray_1.isArray(args) ? resultSelector.apply(void 0, args) : resultSelector(args); }));
+            };
+        }
+    }
+    return function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var params = {
+            subject: undefined,
+            args: args,
+            callbackFunc: callbackFunc,
+            scheduler: scheduler,
+            context: this,
+        };
+        return new Observable_1.Observable(function (subscriber) {
+            var context = params.context;
+            var subject = params.subject;
+            if (!scheduler) {
+                if (!subject) {
+                    subject = params.subject = new AsyncSubject_1.AsyncSubject();
+                    var handler = function () {
+                        var innerArgs = [];
+                        for (var _i = 0; _i < arguments.length; _i++) {
+                            innerArgs[_i] = arguments[_i];
+                        }
+                        var err = innerArgs.shift();
+                        if (err) {
+                            subject.error(err);
+                            return;
+                        }
+                        subject.next(innerArgs.length <= 1 ? innerArgs[0] : innerArgs);
+                        subject.complete();
+                    };
+                    try {
+                        callbackFunc.apply(context, args.concat([handler]));
+                    }
+                    catch (err) {
+                        if (canReportError_1.canReportError(subject)) {
+                            subject.error(err);
+                        }
+                        else {
+                            console.warn(err);
+                        }
+                    }
+                }
+                return subject.subscribe(subscriber);
+            }
+            else {
+                return scheduler.schedule(dispatch, 0, { params: params, subscriber: subscriber, context: context });
+            }
+        });
+    };
+}
+exports.bindNodeCallback = bindNodeCallback;
+function dispatch(state) {
+    var _this = this;
+    var params = state.params, subscriber = state.subscriber, context = state.context;
+    var callbackFunc = params.callbackFunc, args = params.args, scheduler = params.scheduler;
+    var subject = params.subject;
+    if (!subject) {
+        subject = params.subject = new AsyncSubject_1.AsyncSubject();
+        var handler = function () {
+            var innerArgs = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                innerArgs[_i] = arguments[_i];
+            }
+            var err = innerArgs.shift();
+            if (err) {
+                _this.add(scheduler.schedule(dispatchError, 0, { err: err, subject: subject }));
+            }
+            else {
+                var value = innerArgs.length <= 1 ? innerArgs[0] : innerArgs;
+                _this.add(scheduler.schedule(dispatchNext, 0, { value: value, subject: subject }));
+            }
+        };
+        try {
+            callbackFunc.apply(context, args.concat([handler]));
+        }
+        catch (err) {
+            this.add(scheduler.schedule(dispatchError, 0, { err: err, subject: subject }));
+        }
+    }
+    this.add(subject.subscribe(subscriber));
+}
+function dispatchNext(arg) {
+    var value = arg.value, subject = arg.subject;
+    subject.next(value);
+    subject.complete();
+}
+function dispatchError(arg) {
+    var err = arg.err, subject = arg.subject;
+    subject.error(err);
+}
+//# sourceMappingURL=bindNodeCallback.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/observable/combineLatest.js":
 /*!****************************************************************!*\
   !*** ./node_modules/rxjs/internal/observable/combineLatest.js ***!
@@ -23824,6 +24701,38 @@ exports.concat = concat;
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/observable/defer.js":
+/*!********************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/defer.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var from_1 = __webpack_require__(/*! ./from */ "./node_modules/rxjs/internal/observable/from.js");
+var empty_1 = __webpack_require__(/*! ./empty */ "./node_modules/rxjs/internal/observable/empty.js");
+function defer(observableFactory) {
+    return new Observable_1.Observable(function (subscriber) {
+        var input;
+        try {
+            input = observableFactory();
+        }
+        catch (err) {
+            subscriber.error(err);
+            return undefined;
+        }
+        var source = input ? from_1.from(input) : empty_1.empty();
+        return source.subscribe(subscriber);
+    });
+}
+exports.defer = defer;
+//# sourceMappingURL=defer.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/observable/empty.js":
 /*!********************************************************!*\
   !*** ./node_modules/rxjs/internal/observable/empty.js ***!
@@ -23844,6 +24753,88 @@ function emptyScheduled(scheduler) {
     return new Observable_1.Observable(function (subscriber) { return scheduler.schedule(function () { return subscriber.complete(); }); });
 }
 //# sourceMappingURL=empty.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/forkJoin.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/forkJoin.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var isArray_1 = __webpack_require__(/*! ../util/isArray */ "./node_modules/rxjs/internal/util/isArray.js");
+var map_1 = __webpack_require__(/*! ../operators/map */ "./node_modules/rxjs/internal/operators/map.js");
+var isObject_1 = __webpack_require__(/*! ../util/isObject */ "./node_modules/rxjs/internal/util/isObject.js");
+var from_1 = __webpack_require__(/*! ./from */ "./node_modules/rxjs/internal/observable/from.js");
+function forkJoin() {
+    var sources = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        sources[_i] = arguments[_i];
+    }
+    if (sources.length === 1) {
+        var first_1 = sources[0];
+        if (isArray_1.isArray(first_1)) {
+            return forkJoinInternal(first_1, null);
+        }
+        if (isObject_1.isObject(first_1) && Object.getPrototypeOf(first_1) === Object.prototype) {
+            var keys = Object.keys(first_1);
+            return forkJoinInternal(keys.map(function (key) { return first_1[key]; }), keys);
+        }
+    }
+    if (typeof sources[sources.length - 1] === 'function') {
+        var resultSelector_1 = sources.pop();
+        sources = (sources.length === 1 && isArray_1.isArray(sources[0])) ? sources[0] : sources;
+        return forkJoinInternal(sources, null).pipe(map_1.map(function (args) { return resultSelector_1.apply(void 0, args); }));
+    }
+    return forkJoinInternal(sources, null);
+}
+exports.forkJoin = forkJoin;
+function forkJoinInternal(sources, keys) {
+    return new Observable_1.Observable(function (subscriber) {
+        var len = sources.length;
+        if (len === 0) {
+            subscriber.complete();
+            return;
+        }
+        var values = new Array(len);
+        var completed = 0;
+        var emitted = 0;
+        var _loop_1 = function (i) {
+            var source = from_1.from(sources[i]);
+            var hasValue = false;
+            subscriber.add(source.subscribe({
+                next: function (value) {
+                    if (!hasValue) {
+                        hasValue = true;
+                        emitted++;
+                    }
+                    values[i] = value;
+                },
+                error: function (err) { return subscriber.error(err); },
+                complete: function () {
+                    completed++;
+                    if (completed === len || !hasValue) {
+                        if (emitted === len) {
+                            subscriber.next(keys ?
+                                keys.reduce(function (result, key, i) { return (result[key] = values[i], result); }, {}) :
+                                values);
+                        }
+                        subscriber.complete();
+                    }
+                }
+            }));
+        };
+        for (var i = 0; i < len; i++) {
+            _loop_1(i);
+        }
+    });
+}
+//# sourceMappingURL=forkJoin.js.map
 
 /***/ }),
 
@@ -23978,6 +24969,211 @@ function isEventTarget(sourceObj) {
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/observable/fromEventPattern.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/fromEventPattern.js ***!
+  \*******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var isArray_1 = __webpack_require__(/*! ../util/isArray */ "./node_modules/rxjs/internal/util/isArray.js");
+var isFunction_1 = __webpack_require__(/*! ../util/isFunction */ "./node_modules/rxjs/internal/util/isFunction.js");
+var map_1 = __webpack_require__(/*! ../operators/map */ "./node_modules/rxjs/internal/operators/map.js");
+function fromEventPattern(addHandler, removeHandler, resultSelector) {
+    if (resultSelector) {
+        return fromEventPattern(addHandler, removeHandler).pipe(map_1.map(function (args) { return isArray_1.isArray(args) ? resultSelector.apply(void 0, args) : resultSelector(args); }));
+    }
+    return new Observable_1.Observable(function (subscriber) {
+        var handler = function () {
+            var e = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                e[_i] = arguments[_i];
+            }
+            return subscriber.next(e.length === 1 ? e[0] : e);
+        };
+        var retValue;
+        try {
+            retValue = addHandler(handler);
+        }
+        catch (err) {
+            subscriber.error(err);
+            return undefined;
+        }
+        if (!isFunction_1.isFunction(removeHandler)) {
+            return undefined;
+        }
+        return function () { return removeHandler(handler, retValue); };
+    });
+}
+exports.fromEventPattern = fromEventPattern;
+//# sourceMappingURL=fromEventPattern.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/generate.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/generate.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var identity_1 = __webpack_require__(/*! ../util/identity */ "./node_modules/rxjs/internal/util/identity.js");
+var isScheduler_1 = __webpack_require__(/*! ../util/isScheduler */ "./node_modules/rxjs/internal/util/isScheduler.js");
+function generate(initialStateOrOptions, condition, iterate, resultSelectorOrObservable, scheduler) {
+    var resultSelector;
+    var initialState;
+    if (arguments.length == 1) {
+        var options = initialStateOrOptions;
+        initialState = options.initialState;
+        condition = options.condition;
+        iterate = options.iterate;
+        resultSelector = options.resultSelector || identity_1.identity;
+        scheduler = options.scheduler;
+    }
+    else if (resultSelectorOrObservable === undefined || isScheduler_1.isScheduler(resultSelectorOrObservable)) {
+        initialState = initialStateOrOptions;
+        resultSelector = identity_1.identity;
+        scheduler = resultSelectorOrObservable;
+    }
+    else {
+        initialState = initialStateOrOptions;
+        resultSelector = resultSelectorOrObservable;
+    }
+    return new Observable_1.Observable(function (subscriber) {
+        var state = initialState;
+        if (scheduler) {
+            return scheduler.schedule(dispatch, 0, {
+                subscriber: subscriber,
+                iterate: iterate,
+                condition: condition,
+                resultSelector: resultSelector,
+                state: state
+            });
+        }
+        do {
+            if (condition) {
+                var conditionResult = void 0;
+                try {
+                    conditionResult = condition(state);
+                }
+                catch (err) {
+                    subscriber.error(err);
+                    return undefined;
+                }
+                if (!conditionResult) {
+                    subscriber.complete();
+                    break;
+                }
+            }
+            var value = void 0;
+            try {
+                value = resultSelector(state);
+            }
+            catch (err) {
+                subscriber.error(err);
+                return undefined;
+            }
+            subscriber.next(value);
+            if (subscriber.closed) {
+                break;
+            }
+            try {
+                state = iterate(state);
+            }
+            catch (err) {
+                subscriber.error(err);
+                return undefined;
+            }
+        } while (true);
+        return undefined;
+    });
+}
+exports.generate = generate;
+function dispatch(state) {
+    var subscriber = state.subscriber, condition = state.condition;
+    if (subscriber.closed) {
+        return undefined;
+    }
+    if (state.needIterate) {
+        try {
+            state.state = state.iterate(state.state);
+        }
+        catch (err) {
+            subscriber.error(err);
+            return undefined;
+        }
+    }
+    else {
+        state.needIterate = true;
+    }
+    if (condition) {
+        var conditionResult = void 0;
+        try {
+            conditionResult = condition(state.state);
+        }
+        catch (err) {
+            subscriber.error(err);
+            return undefined;
+        }
+        if (!conditionResult) {
+            subscriber.complete();
+            return undefined;
+        }
+        if (subscriber.closed) {
+            return undefined;
+        }
+    }
+    var value;
+    try {
+        value = state.resultSelector(state.state);
+    }
+    catch (err) {
+        subscriber.error(err);
+        return undefined;
+    }
+    if (subscriber.closed) {
+        return undefined;
+    }
+    subscriber.next(value);
+    if (subscriber.closed) {
+        return undefined;
+    }
+    return this.schedule(state);
+}
+//# sourceMappingURL=generate.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/iif.js":
+/*!******************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/iif.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var defer_1 = __webpack_require__(/*! ./defer */ "./node_modules/rxjs/internal/observable/defer.js");
+var empty_1 = __webpack_require__(/*! ./empty */ "./node_modules/rxjs/internal/observable/empty.js");
+function iif(condition, trueResult, falseResult) {
+    if (trueResult === void 0) { trueResult = empty_1.EMPTY; }
+    if (falseResult === void 0) { falseResult = empty_1.EMPTY; }
+    return defer_1.defer(function () { return condition() ? trueResult : falseResult; });
+}
+exports.iif = iif;
+//# sourceMappingURL=iif.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/observable/interval.js":
 /*!***********************************************************!*\
   !*** ./node_modules/rxjs/internal/observable/interval.js ***!
@@ -24109,6 +25305,287 @@ exports.of = of;
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/observable/onErrorResumeNext.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/onErrorResumeNext.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var from_1 = __webpack_require__(/*! ./from */ "./node_modules/rxjs/internal/observable/from.js");
+var isArray_1 = __webpack_require__(/*! ../util/isArray */ "./node_modules/rxjs/internal/util/isArray.js");
+var empty_1 = __webpack_require__(/*! ./empty */ "./node_modules/rxjs/internal/observable/empty.js");
+function onErrorResumeNext() {
+    var sources = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        sources[_i] = arguments[_i];
+    }
+    if (sources.length === 0) {
+        return empty_1.EMPTY;
+    }
+    var first = sources[0], remainder = sources.slice(1);
+    if (sources.length === 1 && isArray_1.isArray(first)) {
+        return onErrorResumeNext.apply(void 0, first);
+    }
+    return new Observable_1.Observable(function (subscriber) {
+        var subNext = function () { return subscriber.add(onErrorResumeNext.apply(void 0, remainder).subscribe(subscriber)); };
+        return from_1.from(first).subscribe({
+            next: function (value) { subscriber.next(value); },
+            error: subNext,
+            complete: subNext,
+        });
+    });
+}
+exports.onErrorResumeNext = onErrorResumeNext;
+//# sourceMappingURL=onErrorResumeNext.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/pairs.js":
+/*!********************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/pairs.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var Subscription_1 = __webpack_require__(/*! ../Subscription */ "./node_modules/rxjs/internal/Subscription.js");
+function pairs(obj, scheduler) {
+    if (!scheduler) {
+        return new Observable_1.Observable(function (subscriber) {
+            var keys = Object.keys(obj);
+            for (var i = 0; i < keys.length && !subscriber.closed; i++) {
+                var key = keys[i];
+                if (obj.hasOwnProperty(key)) {
+                    subscriber.next([key, obj[key]]);
+                }
+            }
+            subscriber.complete();
+        });
+    }
+    else {
+        return new Observable_1.Observable(function (subscriber) {
+            var keys = Object.keys(obj);
+            var subscription = new Subscription_1.Subscription();
+            subscription.add(scheduler.schedule(dispatch, 0, { keys: keys, index: 0, subscriber: subscriber, subscription: subscription, obj: obj }));
+            return subscription;
+        });
+    }
+}
+exports.pairs = pairs;
+function dispatch(state) {
+    var keys = state.keys, index = state.index, subscriber = state.subscriber, subscription = state.subscription, obj = state.obj;
+    if (!subscriber.closed) {
+        if (index < keys.length) {
+            var key = keys[index];
+            subscriber.next([key, obj[key]]);
+            subscription.add(this.schedule({ keys: keys, index: index + 1, subscriber: subscriber, subscription: subscription, obj: obj }));
+        }
+        else {
+            subscriber.complete();
+        }
+    }
+}
+exports.dispatch = dispatch;
+//# sourceMappingURL=pairs.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/partition.js":
+/*!************************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/partition.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var not_1 = __webpack_require__(/*! ../util/not */ "./node_modules/rxjs/internal/util/not.js");
+var subscribeTo_1 = __webpack_require__(/*! ../util/subscribeTo */ "./node_modules/rxjs/internal/util/subscribeTo.js");
+var filter_1 = __webpack_require__(/*! ../operators/filter */ "./node_modules/rxjs/internal/operators/filter.js");
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+function partition(source, predicate, thisArg) {
+    return [
+        filter_1.filter(predicate, thisArg)(new Observable_1.Observable(subscribeTo_1.subscribeTo(source))),
+        filter_1.filter(not_1.not(predicate, thisArg))(new Observable_1.Observable(subscribeTo_1.subscribeTo(source)))
+    ];
+}
+exports.partition = partition;
+//# sourceMappingURL=partition.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/race.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/race.js ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var isArray_1 = __webpack_require__(/*! ../util/isArray */ "./node_modules/rxjs/internal/util/isArray.js");
+var fromArray_1 = __webpack_require__(/*! ./fromArray */ "./node_modules/rxjs/internal/observable/fromArray.js");
+var OuterSubscriber_1 = __webpack_require__(/*! ../OuterSubscriber */ "./node_modules/rxjs/internal/OuterSubscriber.js");
+var subscribeToResult_1 = __webpack_require__(/*! ../util/subscribeToResult */ "./node_modules/rxjs/internal/util/subscribeToResult.js");
+function race() {
+    var observables = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        observables[_i] = arguments[_i];
+    }
+    if (observables.length === 1) {
+        if (isArray_1.isArray(observables[0])) {
+            observables = observables[0];
+        }
+        else {
+            return observables[0];
+        }
+    }
+    return fromArray_1.fromArray(observables, undefined).lift(new RaceOperator());
+}
+exports.race = race;
+var RaceOperator = (function () {
+    function RaceOperator() {
+    }
+    RaceOperator.prototype.call = function (subscriber, source) {
+        return source.subscribe(new RaceSubscriber(subscriber));
+    };
+    return RaceOperator;
+}());
+exports.RaceOperator = RaceOperator;
+var RaceSubscriber = (function (_super) {
+    __extends(RaceSubscriber, _super);
+    function RaceSubscriber(destination) {
+        var _this = _super.call(this, destination) || this;
+        _this.hasFirst = false;
+        _this.observables = [];
+        _this.subscriptions = [];
+        return _this;
+    }
+    RaceSubscriber.prototype._next = function (observable) {
+        this.observables.push(observable);
+    };
+    RaceSubscriber.prototype._complete = function () {
+        var observables = this.observables;
+        var len = observables.length;
+        if (len === 0) {
+            this.destination.complete();
+        }
+        else {
+            for (var i = 0; i < len && !this.hasFirst; i++) {
+                var observable = observables[i];
+                var subscription = subscribeToResult_1.subscribeToResult(this, observable, observable, i);
+                if (this.subscriptions) {
+                    this.subscriptions.push(subscription);
+                }
+                this.add(subscription);
+            }
+            this.observables = null;
+        }
+    };
+    RaceSubscriber.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
+        if (!this.hasFirst) {
+            this.hasFirst = true;
+            for (var i = 0; i < this.subscriptions.length; i++) {
+                if (i !== outerIndex) {
+                    var subscription = this.subscriptions[i];
+                    subscription.unsubscribe();
+                    this.remove(subscription);
+                }
+            }
+            this.subscriptions = null;
+        }
+        this.destination.next(innerValue);
+    };
+    return RaceSubscriber;
+}(OuterSubscriber_1.OuterSubscriber));
+exports.RaceSubscriber = RaceSubscriber;
+//# sourceMappingURL=race.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/range.js":
+/*!********************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/range.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+function range(start, count, scheduler) {
+    if (start === void 0) { start = 0; }
+    return new Observable_1.Observable(function (subscriber) {
+        if (count === undefined) {
+            count = start;
+            start = 0;
+        }
+        var index = 0;
+        var current = start;
+        if (scheduler) {
+            return scheduler.schedule(dispatch, 0, {
+                index: index, count: count, start: start, subscriber: subscriber
+            });
+        }
+        else {
+            do {
+                if (index++ >= count) {
+                    subscriber.complete();
+                    break;
+                }
+                subscriber.next(current++);
+                if (subscriber.closed) {
+                    break;
+                }
+            } while (true);
+        }
+        return undefined;
+    });
+}
+exports.range = range;
+function dispatch(state) {
+    var start = state.start, index = state.index, count = state.count, subscriber = state.subscriber;
+    if (index >= count) {
+        subscriber.complete();
+        return;
+    }
+    subscriber.next(start);
+    if (subscriber.closed) {
+        return;
+    }
+    state.index = index + 1;
+    state.start = start + 1;
+    this.schedule(state);
+}
+exports.dispatch = dispatch;
+//# sourceMappingURL=range.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/observable/throwError.js":
 /*!*************************************************************!*\
   !*** ./node_modules/rxjs/internal/observable/throwError.js ***!
@@ -24134,6 +25611,345 @@ function dispatch(_a) {
     subscriber.error(error);
 }
 //# sourceMappingURL=throwError.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/timer.js":
+/*!********************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/timer.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var async_1 = __webpack_require__(/*! ../scheduler/async */ "./node_modules/rxjs/internal/scheduler/async.js");
+var isNumeric_1 = __webpack_require__(/*! ../util/isNumeric */ "./node_modules/rxjs/internal/util/isNumeric.js");
+var isScheduler_1 = __webpack_require__(/*! ../util/isScheduler */ "./node_modules/rxjs/internal/util/isScheduler.js");
+function timer(dueTime, periodOrScheduler, scheduler) {
+    if (dueTime === void 0) { dueTime = 0; }
+    var period = -1;
+    if (isNumeric_1.isNumeric(periodOrScheduler)) {
+        period = Number(periodOrScheduler) < 1 && 1 || Number(periodOrScheduler);
+    }
+    else if (isScheduler_1.isScheduler(periodOrScheduler)) {
+        scheduler = periodOrScheduler;
+    }
+    if (!isScheduler_1.isScheduler(scheduler)) {
+        scheduler = async_1.async;
+    }
+    return new Observable_1.Observable(function (subscriber) {
+        var due = isNumeric_1.isNumeric(dueTime)
+            ? dueTime
+            : (+dueTime - scheduler.now());
+        return scheduler.schedule(dispatch, due, {
+            index: 0, period: period, subscriber: subscriber
+        });
+    });
+}
+exports.timer = timer;
+function dispatch(state) {
+    var index = state.index, period = state.period, subscriber = state.subscriber;
+    subscriber.next(index);
+    if (subscriber.closed) {
+        return;
+    }
+    else if (period === -1) {
+        return subscriber.complete();
+    }
+    state.index = index + 1;
+    this.schedule(state, period);
+}
+//# sourceMappingURL=timer.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/using.js":
+/*!********************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/using.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+var from_1 = __webpack_require__(/*! ./from */ "./node_modules/rxjs/internal/observable/from.js");
+var empty_1 = __webpack_require__(/*! ./empty */ "./node_modules/rxjs/internal/observable/empty.js");
+function using(resourceFactory, observableFactory) {
+    return new Observable_1.Observable(function (subscriber) {
+        var resource;
+        try {
+            resource = resourceFactory();
+        }
+        catch (err) {
+            subscriber.error(err);
+            return undefined;
+        }
+        var result;
+        try {
+            result = observableFactory(resource);
+        }
+        catch (err) {
+            subscriber.error(err);
+            return undefined;
+        }
+        var source = result ? from_1.from(result) : empty_1.EMPTY;
+        var subscription = source.subscribe(subscriber);
+        return function () {
+            subscription.unsubscribe();
+            if (resource) {
+                resource.unsubscribe();
+            }
+        };
+    });
+}
+exports.using = using;
+//# sourceMappingURL=using.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/observable/zip.js":
+/*!******************************************************!*\
+  !*** ./node_modules/rxjs/internal/observable/zip.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var fromArray_1 = __webpack_require__(/*! ./fromArray */ "./node_modules/rxjs/internal/observable/fromArray.js");
+var isArray_1 = __webpack_require__(/*! ../util/isArray */ "./node_modules/rxjs/internal/util/isArray.js");
+var Subscriber_1 = __webpack_require__(/*! ../Subscriber */ "./node_modules/rxjs/internal/Subscriber.js");
+var OuterSubscriber_1 = __webpack_require__(/*! ../OuterSubscriber */ "./node_modules/rxjs/internal/OuterSubscriber.js");
+var subscribeToResult_1 = __webpack_require__(/*! ../util/subscribeToResult */ "./node_modules/rxjs/internal/util/subscribeToResult.js");
+var iterator_1 = __webpack_require__(/*! ../../internal/symbol/iterator */ "./node_modules/rxjs/internal/symbol/iterator.js");
+function zip() {
+    var observables = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        observables[_i] = arguments[_i];
+    }
+    var resultSelector = observables[observables.length - 1];
+    if (typeof resultSelector === 'function') {
+        observables.pop();
+    }
+    return fromArray_1.fromArray(observables, undefined).lift(new ZipOperator(resultSelector));
+}
+exports.zip = zip;
+var ZipOperator = (function () {
+    function ZipOperator(resultSelector) {
+        this.resultSelector = resultSelector;
+    }
+    ZipOperator.prototype.call = function (subscriber, source) {
+        return source.subscribe(new ZipSubscriber(subscriber, this.resultSelector));
+    };
+    return ZipOperator;
+}());
+exports.ZipOperator = ZipOperator;
+var ZipSubscriber = (function (_super) {
+    __extends(ZipSubscriber, _super);
+    function ZipSubscriber(destination, resultSelector, values) {
+        if (values === void 0) { values = Object.create(null); }
+        var _this = _super.call(this, destination) || this;
+        _this.iterators = [];
+        _this.active = 0;
+        _this.resultSelector = (typeof resultSelector === 'function') ? resultSelector : null;
+        _this.values = values;
+        return _this;
+    }
+    ZipSubscriber.prototype._next = function (value) {
+        var iterators = this.iterators;
+        if (isArray_1.isArray(value)) {
+            iterators.push(new StaticArrayIterator(value));
+        }
+        else if (typeof value[iterator_1.iterator] === 'function') {
+            iterators.push(new StaticIterator(value[iterator_1.iterator]()));
+        }
+        else {
+            iterators.push(new ZipBufferIterator(this.destination, this, value));
+        }
+    };
+    ZipSubscriber.prototype._complete = function () {
+        var iterators = this.iterators;
+        var len = iterators.length;
+        this.unsubscribe();
+        if (len === 0) {
+            this.destination.complete();
+            return;
+        }
+        this.active = len;
+        for (var i = 0; i < len; i++) {
+            var iterator = iterators[i];
+            if (iterator.stillUnsubscribed) {
+                var destination = this.destination;
+                destination.add(iterator.subscribe(iterator, i));
+            }
+            else {
+                this.active--;
+            }
+        }
+    };
+    ZipSubscriber.prototype.notifyInactive = function () {
+        this.active--;
+        if (this.active === 0) {
+            this.destination.complete();
+        }
+    };
+    ZipSubscriber.prototype.checkIterators = function () {
+        var iterators = this.iterators;
+        var len = iterators.length;
+        var destination = this.destination;
+        for (var i = 0; i < len; i++) {
+            var iterator = iterators[i];
+            if (typeof iterator.hasValue === 'function' && !iterator.hasValue()) {
+                return;
+            }
+        }
+        var shouldComplete = false;
+        var args = [];
+        for (var i = 0; i < len; i++) {
+            var iterator = iterators[i];
+            var result = iterator.next();
+            if (iterator.hasCompleted()) {
+                shouldComplete = true;
+            }
+            if (result.done) {
+                destination.complete();
+                return;
+            }
+            args.push(result.value);
+        }
+        if (this.resultSelector) {
+            this._tryresultSelector(args);
+        }
+        else {
+            destination.next(args);
+        }
+        if (shouldComplete) {
+            destination.complete();
+        }
+    };
+    ZipSubscriber.prototype._tryresultSelector = function (args) {
+        var result;
+        try {
+            result = this.resultSelector.apply(this, args);
+        }
+        catch (err) {
+            this.destination.error(err);
+            return;
+        }
+        this.destination.next(result);
+    };
+    return ZipSubscriber;
+}(Subscriber_1.Subscriber));
+exports.ZipSubscriber = ZipSubscriber;
+var StaticIterator = (function () {
+    function StaticIterator(iterator) {
+        this.iterator = iterator;
+        this.nextResult = iterator.next();
+    }
+    StaticIterator.prototype.hasValue = function () {
+        return true;
+    };
+    StaticIterator.prototype.next = function () {
+        var result = this.nextResult;
+        this.nextResult = this.iterator.next();
+        return result;
+    };
+    StaticIterator.prototype.hasCompleted = function () {
+        var nextResult = this.nextResult;
+        return nextResult && nextResult.done;
+    };
+    return StaticIterator;
+}());
+var StaticArrayIterator = (function () {
+    function StaticArrayIterator(array) {
+        this.array = array;
+        this.index = 0;
+        this.length = 0;
+        this.length = array.length;
+    }
+    StaticArrayIterator.prototype[iterator_1.iterator] = function () {
+        return this;
+    };
+    StaticArrayIterator.prototype.next = function (value) {
+        var i = this.index++;
+        var array = this.array;
+        return i < this.length ? { value: array[i], done: false } : { value: null, done: true };
+    };
+    StaticArrayIterator.prototype.hasValue = function () {
+        return this.array.length > this.index;
+    };
+    StaticArrayIterator.prototype.hasCompleted = function () {
+        return this.array.length === this.index;
+    };
+    return StaticArrayIterator;
+}());
+var ZipBufferIterator = (function (_super) {
+    __extends(ZipBufferIterator, _super);
+    function ZipBufferIterator(destination, parent, observable) {
+        var _this = _super.call(this, destination) || this;
+        _this.parent = parent;
+        _this.observable = observable;
+        _this.stillUnsubscribed = true;
+        _this.buffer = [];
+        _this.isComplete = false;
+        return _this;
+    }
+    ZipBufferIterator.prototype[iterator_1.iterator] = function () {
+        return this;
+    };
+    ZipBufferIterator.prototype.next = function () {
+        var buffer = this.buffer;
+        if (buffer.length === 0 && this.isComplete) {
+            return { value: null, done: true };
+        }
+        else {
+            return { value: buffer.shift(), done: false };
+        }
+    };
+    ZipBufferIterator.prototype.hasValue = function () {
+        return this.buffer.length > 0;
+    };
+    ZipBufferIterator.prototype.hasCompleted = function () {
+        return this.buffer.length === 0 && this.isComplete;
+    };
+    ZipBufferIterator.prototype.notifyComplete = function () {
+        if (this.buffer.length > 0) {
+            this.isComplete = true;
+            this.parent.notifyInactive();
+        }
+        else {
+            this.destination.complete();
+        }
+    };
+    ZipBufferIterator.prototype.notifyNext = function (outerValue, innerValue, outerIndex, innerIndex, innerSub) {
+        this.buffer.push(innerValue);
+        this.parent.checkIterators();
+    };
+    ZipBufferIterator.prototype.subscribe = function (value, index) {
+        return subscribeToResult_1.subscribeToResult(this, this.observable, this, index);
+    };
+    return ZipBufferIterator;
+}(OuterSubscriber_1.OuterSubscriber));
+//# sourceMappingURL=zip.js.map
 
 /***/ }),
 
@@ -25586,6 +27402,89 @@ function reduce(accumulator, seed) {
 }
 exports.reduce = reduce;
 //# sourceMappingURL=reduce.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/operators/refCount.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/rxjs/internal/operators/refCount.js ***!
+  \**********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var Subscriber_1 = __webpack_require__(/*! ../Subscriber */ "./node_modules/rxjs/internal/Subscriber.js");
+function refCount() {
+    return function refCountOperatorFunction(source) {
+        return source.lift(new RefCountOperator(source));
+    };
+}
+exports.refCount = refCount;
+var RefCountOperator = (function () {
+    function RefCountOperator(connectable) {
+        this.connectable = connectable;
+    }
+    RefCountOperator.prototype.call = function (subscriber, source) {
+        var connectable = this.connectable;
+        connectable._refCount++;
+        var refCounter = new RefCountSubscriber(subscriber, connectable);
+        var subscription = source.subscribe(refCounter);
+        if (!refCounter.closed) {
+            refCounter.connection = connectable.connect();
+        }
+        return subscription;
+    };
+    return RefCountOperator;
+}());
+var RefCountSubscriber = (function (_super) {
+    __extends(RefCountSubscriber, _super);
+    function RefCountSubscriber(destination, connectable) {
+        var _this = _super.call(this, destination) || this;
+        _this.connectable = connectable;
+        return _this;
+    }
+    RefCountSubscriber.prototype._unsubscribe = function () {
+        var connectable = this.connectable;
+        if (!connectable) {
+            this.connection = null;
+            return;
+        }
+        this.connectable = null;
+        var refCount = connectable._refCount;
+        if (refCount <= 0) {
+            this.connection = null;
+            return;
+        }
+        connectable._refCount = refCount - 1;
+        if (refCount > 1) {
+            this.connection = null;
+            return;
+        }
+        var connection = this.connection;
+        var sharedConnection = connectable._connection;
+        this.connection = null;
+        if (sharedConnection && (!connection || sharedConnection === connection)) {
+            sharedConnection.unsubscribe();
+        }
+    };
+    return RefCountSubscriber;
+}(Subscriber_1.Subscriber));
+//# sourceMappingURL=refCount.js.map
 
 /***/ }),
 
@@ -27185,6 +29084,122 @@ exports.AnimationFrameScheduler = AnimationFrameScheduler;
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/scheduler/AsapAction.js":
+/*!************************************************************!*\
+  !*** ./node_modules/rxjs/internal/scheduler/AsapAction.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var Immediate_1 = __webpack_require__(/*! ../util/Immediate */ "./node_modules/rxjs/internal/util/Immediate.js");
+var AsyncAction_1 = __webpack_require__(/*! ./AsyncAction */ "./node_modules/rxjs/internal/scheduler/AsyncAction.js");
+var AsapAction = (function (_super) {
+    __extends(AsapAction, _super);
+    function AsapAction(scheduler, work) {
+        var _this = _super.call(this, scheduler, work) || this;
+        _this.scheduler = scheduler;
+        _this.work = work;
+        return _this;
+    }
+    AsapAction.prototype.requestAsyncId = function (scheduler, id, delay) {
+        if (delay === void 0) { delay = 0; }
+        if (delay !== null && delay > 0) {
+            return _super.prototype.requestAsyncId.call(this, scheduler, id, delay);
+        }
+        scheduler.actions.push(this);
+        return scheduler.scheduled || (scheduler.scheduled = Immediate_1.Immediate.setImmediate(scheduler.flush.bind(scheduler, null)));
+    };
+    AsapAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
+        if (delay === void 0) { delay = 0; }
+        if ((delay !== null && delay > 0) || (delay === null && this.delay > 0)) {
+            return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay);
+        }
+        if (scheduler.actions.length === 0) {
+            Immediate_1.Immediate.clearImmediate(id);
+            scheduler.scheduled = undefined;
+        }
+        return undefined;
+    };
+    return AsapAction;
+}(AsyncAction_1.AsyncAction));
+exports.AsapAction = AsapAction;
+//# sourceMappingURL=AsapAction.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/scheduler/AsapScheduler.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/rxjs/internal/scheduler/AsapScheduler.js ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var AsyncScheduler_1 = __webpack_require__(/*! ./AsyncScheduler */ "./node_modules/rxjs/internal/scheduler/AsyncScheduler.js");
+var AsapScheduler = (function (_super) {
+    __extends(AsapScheduler, _super);
+    function AsapScheduler() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    AsapScheduler.prototype.flush = function (action) {
+        this.active = true;
+        this.scheduled = undefined;
+        var actions = this.actions;
+        var error;
+        var index = -1;
+        var count = actions.length;
+        action = action || actions.shift();
+        do {
+            if (error = action.execute(action.state, action.delay)) {
+                break;
+            }
+        } while (++index < count && (action = actions.shift()));
+        this.active = false;
+        if (error) {
+            while (++index < count && (action = actions.shift())) {
+                action.unsubscribe();
+            }
+            throw error;
+        }
+    };
+    return AsapScheduler;
+}(AsyncScheduler_1.AsyncScheduler));
+exports.AsapScheduler = AsapScheduler;
+//# sourceMappingURL=AsapScheduler.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/scheduler/AsyncAction.js":
 /*!*************************************************************!*\
   !*** ./node_modules/rxjs/internal/scheduler/AsyncAction.js ***!
@@ -27473,6 +29488,128 @@ exports.QueueScheduler = QueueScheduler;
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/scheduler/VirtualTimeScheduler.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/rxjs/internal/scheduler/VirtualTimeScheduler.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var AsyncAction_1 = __webpack_require__(/*! ./AsyncAction */ "./node_modules/rxjs/internal/scheduler/AsyncAction.js");
+var AsyncScheduler_1 = __webpack_require__(/*! ./AsyncScheduler */ "./node_modules/rxjs/internal/scheduler/AsyncScheduler.js");
+var VirtualTimeScheduler = (function (_super) {
+    __extends(VirtualTimeScheduler, _super);
+    function VirtualTimeScheduler(SchedulerAction, maxFrames) {
+        if (SchedulerAction === void 0) { SchedulerAction = VirtualAction; }
+        if (maxFrames === void 0) { maxFrames = Number.POSITIVE_INFINITY; }
+        var _this = _super.call(this, SchedulerAction, function () { return _this.frame; }) || this;
+        _this.maxFrames = maxFrames;
+        _this.frame = 0;
+        _this.index = -1;
+        return _this;
+    }
+    VirtualTimeScheduler.prototype.flush = function () {
+        var _a = this, actions = _a.actions, maxFrames = _a.maxFrames;
+        var error, action;
+        while ((action = actions[0]) && action.delay <= maxFrames) {
+            actions.shift();
+            this.frame = action.delay;
+            if (error = action.execute(action.state, action.delay)) {
+                break;
+            }
+        }
+        if (error) {
+            while (action = actions.shift()) {
+                action.unsubscribe();
+            }
+            throw error;
+        }
+    };
+    VirtualTimeScheduler.frameTimeFactor = 10;
+    return VirtualTimeScheduler;
+}(AsyncScheduler_1.AsyncScheduler));
+exports.VirtualTimeScheduler = VirtualTimeScheduler;
+var VirtualAction = (function (_super) {
+    __extends(VirtualAction, _super);
+    function VirtualAction(scheduler, work, index) {
+        if (index === void 0) { index = scheduler.index += 1; }
+        var _this = _super.call(this, scheduler, work) || this;
+        _this.scheduler = scheduler;
+        _this.work = work;
+        _this.index = index;
+        _this.active = true;
+        _this.index = scheduler.index = index;
+        return _this;
+    }
+    VirtualAction.prototype.schedule = function (state, delay) {
+        if (delay === void 0) { delay = 0; }
+        if (!this.id) {
+            return _super.prototype.schedule.call(this, state, delay);
+        }
+        this.active = false;
+        var action = new VirtualAction(this.scheduler, this.work);
+        this.add(action);
+        return action.schedule(state, delay);
+    };
+    VirtualAction.prototype.requestAsyncId = function (scheduler, id, delay) {
+        if (delay === void 0) { delay = 0; }
+        this.delay = scheduler.frame + delay;
+        var actions = scheduler.actions;
+        actions.push(this);
+        actions.sort(VirtualAction.sortActions);
+        return true;
+    };
+    VirtualAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
+        if (delay === void 0) { delay = 0; }
+        return undefined;
+    };
+    VirtualAction.prototype._execute = function (state, delay) {
+        if (this.active === true) {
+            return _super.prototype._execute.call(this, state, delay);
+        }
+    };
+    VirtualAction.sortActions = function (a, b) {
+        if (a.delay === b.delay) {
+            if (a.index === b.index) {
+                return 0;
+            }
+            else if (a.index > b.index) {
+                return 1;
+            }
+            else {
+                return -1;
+            }
+        }
+        else if (a.delay > b.delay) {
+            return 1;
+        }
+        else {
+            return -1;
+        }
+    };
+    return VirtualAction;
+}(AsyncAction_1.AsyncAction));
+exports.VirtualAction = VirtualAction;
+//# sourceMappingURL=VirtualTimeScheduler.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/scheduler/animationFrame.js":
 /*!****************************************************************!*\
   !*** ./node_modules/rxjs/internal/scheduler/animationFrame.js ***!
@@ -27487,6 +29624,23 @@ var AnimationFrameAction_1 = __webpack_require__(/*! ./AnimationFrameAction */ "
 var AnimationFrameScheduler_1 = __webpack_require__(/*! ./AnimationFrameScheduler */ "./node_modules/rxjs/internal/scheduler/AnimationFrameScheduler.js");
 exports.animationFrame = new AnimationFrameScheduler_1.AnimationFrameScheduler(AnimationFrameAction_1.AnimationFrameAction);
 //# sourceMappingURL=animationFrame.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/scheduler/asap.js":
+/*!******************************************************!*\
+  !*** ./node_modules/rxjs/internal/scheduler/asap.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var AsapAction_1 = __webpack_require__(/*! ./AsapAction */ "./node_modules/rxjs/internal/scheduler/AsapAction.js");
+var AsapScheduler_1 = __webpack_require__(/*! ./AsapScheduler */ "./node_modules/rxjs/internal/scheduler/AsapScheduler.js");
+exports.asap = new AsapScheduler_1.AsapScheduler(AsapAction_1.AsapAction);
+//# sourceMappingURL=asap.js.map
 
 /***/ }),
 
@@ -27632,6 +29786,39 @@ exports.EmptyError = EmptyErrorImpl;
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/util/Immediate.js":
+/*!******************************************************!*\
+  !*** ./node_modules/rxjs/internal/util/Immediate.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var nextHandle = 1;
+var tasksByHandle = {};
+function runIfPresent(handle) {
+    var cb = tasksByHandle[handle];
+    if (cb) {
+        cb();
+    }
+}
+exports.Immediate = {
+    setImmediate: function (cb) {
+        var handle = nextHandle++;
+        tasksByHandle[handle] = cb;
+        Promise.resolve().then(function () { return runIfPresent(handle); });
+        return handle;
+    },
+    clearImmediate: function (handle) {
+        delete tasksByHandle[handle];
+    },
+};
+//# sourceMappingURL=Immediate.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/util/ObjectUnsubscribedError.js":
 /*!********************************************************************!*\
   !*** ./node_modules/rxjs/internal/util/ObjectUnsubscribedError.js ***!
@@ -27654,6 +29841,31 @@ var ObjectUnsubscribedErrorImpl = (function () {
 })();
 exports.ObjectUnsubscribedError = ObjectUnsubscribedErrorImpl;
 //# sourceMappingURL=ObjectUnsubscribedError.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/util/TimeoutError.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/rxjs/internal/util/TimeoutError.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var TimeoutErrorImpl = (function () {
+    function TimeoutErrorImpl() {
+        Error.call(this);
+        this.message = 'Timeout has occurred';
+        this.name = 'TimeoutError';
+        return this;
+    }
+    TimeoutErrorImpl.prototype = Object.create(Error.prototype);
+    return TimeoutErrorImpl;
+})();
+exports.TimeoutError = TimeoutErrorImpl;
+//# sourceMappingURL=TimeoutError.js.map
 
 /***/ }),
 
@@ -27892,6 +30104,25 @@ exports.isObject = isObject;
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/internal/util/isObservable.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/rxjs/internal/util/isObservable.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Observable_1 = __webpack_require__(/*! ../Observable */ "./node_modules/rxjs/internal/Observable.js");
+function isObservable(obj) {
+    return !!obj && (obj instanceof Observable_1.Observable || (typeof obj.lift === 'function' && typeof obj.subscribe === 'function'));
+}
+exports.isObservable = isObservable;
+//# sourceMappingURL=isObservable.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/internal/util/isPromise.js":
 /*!******************************************************!*\
   !*** ./node_modules/rxjs/internal/util/isPromise.js ***!
@@ -27941,6 +30172,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function noop() { }
 exports.noop = noop;
 //# sourceMappingURL=noop.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/internal/util/not.js":
+/*!************************************************!*\
+  !*** ./node_modules/rxjs/internal/util/not.js ***!
+  \************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function not(pred, thisArg) {
+    function notPred() {
+        return !(notPred.pred.apply(notPred.thisArg, arguments));
+    }
+    notPred.pred = pred;
+    notPred.thisArg = thisArg;
+    return notPred;
+}
+exports.not = not;
+//# sourceMappingURL=not.js.map
 
 /***/ }),
 
@@ -28547,7 +30801,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _model_root__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../model/root */ "./model/root.ts");
+/* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../model/contextTree */ "./model/contextTree.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -28572,7 +30826,7 @@ let RootStore = class RootStore extends _hypertype_app__WEBPACK_IMPORTED_MODULE_
 };
 RootStore = __decorate([
     Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Injectable"])(),
-    __metadata("design:paramtypes", [_hypertype_app__WEBPACK_IMPORTED_MODULE_0__["RootStore"], _model_root__WEBPACK_IMPORTED_MODULE_2__["Root"]])
+    __metadata("design:paramtypes", [_hypertype_app__WEBPACK_IMPORTED_MODULE_0__["RootStore"], _model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"]])
 ], RootStore);
 
 class RootState {
@@ -28596,7 +30850,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
 /* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _model_root__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../model/root */ "./model/root.ts");
+/* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../model/contextTree */ "./model/contextTree.ts");
 /* harmony import */ var _RootStore__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./RootStore */ "./store/RootStore.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -28621,7 +30875,7 @@ let SelectionStore = class SelectionStore extends _hypertype_app__WEBPACK_IMPORT
 };
 SelectionStore = __decorate([
     Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])(),
-    __metadata("design:paramtypes", [_RootStore__WEBPACK_IMPORTED_MODULE_3__["RootStore"], _model_root__WEBPACK_IMPORTED_MODULE_2__["Root"]])
+    __metadata("design:paramtypes", [_RootStore__WEBPACK_IMPORTED_MODULE_3__["RootStore"], _model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"]])
 ], SelectionStore);
 
 class SelectionState {
@@ -28641,17 +30895,15 @@ class SelectionActions extends _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["Acti
         this.root = root;
     }
     Path(path) {
-        const context = this.root.get(path);
-        this.Diff({
-            Path: path.join(':'),
-            Key: context.Key,
-        });
+        this.root.Cursor.Path = path;
     }
     Prev() {
-        this.Custom(Actions.prev);
+        this.root.Cursor.Path = this.root.Cursor.getTopMove();
+        this.root.Update.next();
     }
     Next() {
-        this.Custom(Actions.next);
+        this.root.Cursor.Path = this.root.Cursor.getBottomMove();
+        this.root.Update.next();
     }
     MoveLeft() {
         this.Custom(Actions.left);
@@ -28673,15 +30925,16 @@ class SelectionActions extends _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["Acti
     }
 }
 class SelectionReducer {
-    constructor(root) {
-        this.root = root;
+    constructor(tree) {
+        this.tree = tree;
         this.objectReducer = (state, action) => {
             if (!state.Path)
-                state.Path = this.root.MainContext.Id;
-            const selectedContext = this.root.get(state.Path.split(':'));
+                state.Path = this.tree.Root.Id;
+            const path = state.Path.split(':');
+            const selectedContext = this.tree.Items.get(state.Path.split(':').pop());
             switch (Actions[action.type]) {
-                case Actions.left:
-                    selectedContext.Actions.Move.Left();
+                /*case Actions.left:
+                    this.tree.Move.Left(path);
                     return {
                         Path: selectedContext.Path.join(':'),
                         Key: selectedContext.Key,
@@ -28717,7 +30970,7 @@ class SelectionReducer {
                     return {
                         Path: selectedContext.Next.Path.join(':'),
                         Key: selectedContext.Next.Key,
-                    };
+                    };*/
             }
             return state;
         };
