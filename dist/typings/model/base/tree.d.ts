@@ -1,28 +1,13 @@
-import { Id, IdPath } from "./id";
-export declare type Leaf<T> = {
-    Children: T[];
-    Parent: T;
-};
-export declare abstract class GeneralTree<T extends GeneralTree<T, TKey>, TKey = Id> {
-    private readonly this;
-    flatMap<U>(fn: (t: T) => U): any;
-    map<U extends Leaf<U>>(fn: (t: T) => U): U;
-    forEach(fn: (t: T) => void | any): void;
-    get(ids: TKey[]): T;
+import { Id } from "./id";
+import { Leaf } from "./leaf";
+export interface ILeaf<TKey> {
     Id: TKey;
-    Path: IdPath;
-    Children: T[];
-    Parent: T;
-    protected MoveLeft(): void;
-    protected MoveRight(): void;
-    protected MoveUp(): void;
-    protected MoveDown(): void;
-    readonly PrevSibling: T;
-    readonly NextSibling: T;
-    readonly Prev: T;
-    readonly Next: T;
+    Children: TKey[];
 }
-export declare function treeMap<T>(root: T, children: (t: T) => T[]): {
-    map: <U extends Leaf<U>>(fn: (t: T) => U) => U;
-    forEach: (fn: (t: T) => any) => void;
-};
+export declare abstract class Tree<TLeaf extends Leaf<TValue, TKey>, TValue extends ILeaf<TKey>, TKey = Id> {
+    abstract readonly Root: TLeaf;
+    abstract readonly Items: Map<TKey, TLeaf>;
+    private readonly Leafs;
+    SetParents(): void;
+    Cursor: any;
+}

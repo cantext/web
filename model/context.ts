@@ -67,8 +67,6 @@ export class Context extends Leaf<ContextDbo, Id> {
         this._pathToKey[[...to, this.Id].join(':')] = this._pathToKey[[...from, this.Id].join(':')]
         oldParent.RemoveChild(this);
         newParent.InsertAt(this, index);
-        newParent.Update.next();
-        oldParent.Update.next();
         this.Update.next();
     }
 
@@ -81,4 +79,14 @@ export class Context extends Leaf<ContextDbo, Id> {
         tap(console.log),
         shareReplay(1),
     );
+
+
+    RemoveChild(child: this) {
+        super.RemoveChild(child);
+        this.Update.next();
+    }
+    InsertAt(child: this, index) {
+        super.InsertAt(child, index);
+        this.Update.next();
+    }
 }

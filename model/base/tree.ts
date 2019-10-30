@@ -31,7 +31,7 @@ export abstract class Tree<TLeaf extends Leaf<TValue, TKey>,
             });
     }
 
-    public Cursor = new TreeCursor(this);
+    public Cursor = new TreeCursor<TLeaf, TValue, TKey>(this);
 
 }
 

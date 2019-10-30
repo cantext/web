@@ -1,3 +1,3 @@
 export declare type Id = string;
-export declare type IdPath = Id[];
+export declare type Path<TKey = Id> = TKey[];
 export declare function Id(): Id;

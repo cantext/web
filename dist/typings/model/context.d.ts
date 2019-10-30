@@ -1,27 +1,24 @@
 import { ContextDbo, RelationType } from "./dbo/context.dbo";
-import { GeneralTree } from "./base/tree";
 import { User } from "./user";
-import { Id } from "./base/id";
-import { Root } from "./root";
-export declare class Context extends GeneralTree<Context> {
-    private root;
-    Data: ContextDbo;
-    Children: Context[];
-    Parent: Context;
+import { Id, Path } from "./base/id";
+import { ContextTree } from "./contextTree";
+import { Leaf } from "./base/leaf";
+import { Observable, ReplaySubject } from "rxjs";
+export declare class Context extends Leaf<ContextDbo, Id> {
+    SetText(text: any): void;
     Users: Map<User, RelationType>;
     Collapsed: boolean;
-    constructor(root: Root, dbo: ContextDbo);
+    protected tree: ContextTree;
+    constructor(tree: ContextTree, dbo: ContextDbo);
     GetDbo(): any;
     toString(): string;
     readonly Id: string;
-    readonly Path: any[];
-    Key: Id;
-    Actions: {
-        Move: {
-            Left: () => void;
-            Right: () => void;
-            Down: () => void;
-            Up: () => void;
-        };
-    };
+    private _pathToKey;
+    getKey(path: Path): any;
+    Move(from: Path, { parent: to, index }: {
+        parent: any;
+        index: any;
+    }): void;
+    Update: ReplaySubject<void>;
+    State$: Observable<Context>;
 }

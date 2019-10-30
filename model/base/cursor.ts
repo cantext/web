@@ -11,21 +11,28 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
 
     }
 
-    private isRoot(path: Path<TKey>) {
+    public isRoot(path: Path<TKey>) {
         return path.length == 1;
     }
 
-    private getCurrent(path: Path<TKey>): TLeaf {
+    public getCurrent(path: Path<TKey> = this.Path): TLeaf {
         const [currentId] = path.slice(-1);
         return this.tree.Items.get(currentId);
     }
+    public getCurrentIndex(path: Path<TKey> = this.Path): number {
+        const parent = this.getParent(path);
+        const current = this.getCurrent(path);
+        const index = parent.Value.Children.indexOf(current.Id);
+        return index;
+    }
 
-    private getParent(path: Path<TKey>): TLeaf {
+
+    public getParent(path: Path<TKey> = this.Path): TLeaf {
         const [parentId] = path.slice(-2);
         return this.tree.Items.get(parentId);
     }
 
-    private getGrand(path: Path<TKey>): TLeaf {
+    public getGrand(path: Path<TKey> = this.Path): TLeaf {
         const [grandId] = path.slice(-3);
         return this.tree.Items.get(grandId);
     }
@@ -48,12 +55,10 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
         if (this.isRoot(path))
             return null;
         const parent = this.getParent(path);
-        const current = this.getCurrent(path);
-        const index = parent.Value.Children.indexOf(current.Id);
+        const index = this.getCurrentIndex(path);
         if (index == 0)
             return null;
         const newParent = parent.Children[index - 1];
-        const lastChildId = newParent.Value.Children[newParent.Value.Children.length - 1];
         return {
             parent: [
                 ...path.slice(0, -1),
@@ -67,8 +72,7 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
         if (this.isRoot(path))
             return null;
         const parent = this.getParent(path);
-        const current = this.getCurrent(path);
-        const index = parent.Value.Children.indexOf(current.Id);
+        const index = this.getCurrentIndex(path);
         if (index > 0)
             return {
                 parent: path.slice(0, -1),
@@ -87,9 +91,8 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
     public getBottomMove(path = this.Path): { parent: Path<TKey>, index: number } {
         if (this.isRoot(path))
             return null;
-        const [parentId, currentId] = path.slice(-2);
-        const parent = this.tree.Items.get(parentId);
-        const index = parent.Value.Children.indexOf(currentId);
+        const parent = this.getParent(path);
+        const index = this.getCurrentIndex(path);
         if (index < parent.Value.Children.length - 1)
             return {
                 parent: path.slice(0, -1),
@@ -136,9 +139,8 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
     getNextChild(path: Path<TKey>) {
         if (path.length == 1)
             return null;
-        const [parentId, currentId] = path.slice(-2);
-        const parent = this.tree.Items.get(parentId);
-        const index = parent.Value.Children.indexOf(currentId);
+        const parent = this.getParent(path);
+        const index = this.getCurrentIndex(path);
         if (index < parent.Value.Children.length - 1)
             return [
                 ...path.slice(0, -1),
@@ -150,9 +152,8 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
     GetUp(path = this.Path) {
         if (path.length == 1)
             return null;
-        const [parentId, currentId] = path.slice(-2);
-        const parent = this.tree.Items.get(parentId);
-        const index = parent.Value.Children.indexOf(currentId);
+        const parent = this.getParent(path);
+        const index = this.getCurrentIndex(path);
         if (index > 0)
             return this.getLastChild([
                 ...path.slice(0, -1),

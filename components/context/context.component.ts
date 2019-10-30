@@ -21,7 +21,6 @@ import {RootStore} from "../../store/RootStore";
 import {Context} from "../../model/context";
 import {Path} from "../../model/base/id";
 import {ContextTree} from "../../model/contextTree";
-import {SelectionStore} from "../../store/selection.store";
 
 @Injectable(true)
 @Component({
@@ -57,8 +56,7 @@ import {SelectionStore} from "../../store/selection.store";
 })
 export class ContextComponent extends HyperComponent<IState> {
 
-    constructor(private selectionStore: SelectionStore,
-                private root: ContextTree) {
+    constructor(private root: ContextTree) {
         super();
     }
 

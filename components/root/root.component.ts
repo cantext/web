@@ -1,7 +1,6 @@
 import {Component, HyperComponent} from "@hypertype/ui";
 import {ContextTree} from "../../model/contextTree";
 import {fromEvent, Injectable, merge, tap} from "@hypertype/core";
-import {SelectionStore} from "../../store/selection.store";
 
 @Injectable(true)
 @Component({
@@ -13,8 +12,7 @@ import {SelectionStore} from "../../store/selection.store";
 })
 export class RootComponent extends HyperComponent<ContextTree> {
 
-    constructor(private root: ContextTree,
-                private selectionStore: SelectionStore) {
+    constructor(private root: ContextTree) {
         super();
     }
 
@@ -50,6 +48,14 @@ export class RootComponent extends HyperComponent<ContextTree> {
                         event.preventDefault();
                         event.shiftKey ? this.root.Move.Left() : this.root.Move.Right();
                         break;
+                    case 'Enter':
+                        if (!event.shiftKey){
+                            this.root.Add();
+                            event.preventDefault();
+                        }
+                        break;
+                    default:
+                        console.log(event.key)
                 }
 
             })

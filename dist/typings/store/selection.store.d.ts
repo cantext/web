@@ -1,21 +1,20 @@
 import { ActionsCreator, ObservableStore, Reducer } from "@hypertype/app";
-import { Root } from "../model/root";
-import { RootState, RootStore } from "./RootStore";
-import { Id, IdPath } from "../model/base/id";
+import { ContextTree } from "../model/contextTree";
+import { RootStore } from "./RootStore";
+import { Path } from "../model/base/id";
 export declare class SelectionStore extends ObservableStore<SelectionState> {
     private root;
-    constructor(rootStore: RootStore, root: Root);
+    constructor(rootStore: RootStore, root: ContextTree);
     Actions: SelectionActions;
     reducer: SelectionReducer;
 }
 export declare class SelectionState {
     Path: string;
-    Key: Id;
 }
-declare class SelectionActions extends ActionsCreator<RootState> {
+declare class SelectionActions extends ActionsCreator<SelectionState> {
     private root;
-    constructor(root: Root);
-    Path(path: IdPath): void;
+    constructor(root: ContextTree);
+    Path(path: Path): void;
     Prev(): void;
     Next(): void;
     MoveLeft(): void;
@@ -25,8 +24,8 @@ declare class SelectionActions extends ActionsCreator<RootState> {
     private Custom;
 }
 declare class SelectionReducer {
-    private root;
-    constructor(root: Root);
+    private tree;
+    constructor(tree: ContextTree);
     private objectReducer;
     reduce: Reducer<SelectionState>;
 }

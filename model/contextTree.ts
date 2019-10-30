@@ -1,11 +1,10 @@
 import {DefaultData} from "./dbo/default";
-import {Id, Path} from "./base/id";
+import {Id} from "./base/id";
 import {Tree} from "./base/tree";
 import {Context} from "./context";
 import {ContextDbo, ContextState, RootDbo} from "./dbo/context.dbo";
 import {User} from "./user";
-import {debounceTime, map, mapTo, Observable, ReplaySubject, shareReplay} from "@hypertype/core";
-import {TreeCursor} from "./base/cursor";
+import {debounceTime, mapTo, Observable, ReplaySubject, shareReplay} from "@hypertype/core";
 
 export class ContextTree extends Tree<Context, ContextDbo, Id> {
 
@@ -73,35 +72,48 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
             const target = this.Cursor.getLeftMove();
             if (!target)
                 return;
-            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
-            this.Cursor.SetPath([...target.parent,id]);
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+            this.Cursor.SetPath([...target.parent, id]);
         },
         Right: () => {
             const id = this.Cursor.Path[this.Cursor.Path.length - 1];
             const target = this.Cursor.getRightMove();
             if (!target)
                 return;
-            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
-            this.Cursor.SetPath([...target.parent,id]);
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+            this.Cursor.SetPath([...target.parent, id]);
         },
         Down: () => {
             const id = this.Cursor.Path[this.Cursor.Path.length - 1];
             const target = this.Cursor.getBottomMove();
             if (!target)
                 return;
-            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
-            this.Cursor.SetPath([...target.parent,id]);
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+            this.Cursor.SetPath([...target.parent, id]);
         },
         Up: () => {
             const id = this.Cursor.Path[this.Cursor.Path.length - 1];
             const target = this.Cursor.getTopMove();
             if (!target)
                 return;
-            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
-            this.Cursor.SetPath([...target.parent,id]);
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1), target);
+            this.Cursor.SetPath([...target.parent, id]);
         }
-    }
+    };
 
+    Add() {
+        const context = new Context(this, {
+            Content: [{Text: ''}],
+            Children: [],
+            Id: Id(),
+            Time: null
+        });
+        this.Items.set(context.Id, context);
+        const parent = this.Cursor.getParent();
+        parent.InsertAt(context, this.Cursor.getCurrentIndex() + 1);
+        parent.Update.next();
+        this.Cursor.Down();
+    }
 }
 
 

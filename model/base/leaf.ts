@@ -56,7 +56,7 @@ export abstract class Leaf<TValue extends ILeaf<TKey>, TKey = Id> {
         this.Value.Children.remove(child.Id);
     }
 
-    protected InsertAt(child: this, index) {
+    InsertAt(child: this, index) {
         child.Parents.set(this.Id, this);
         this.Value.Children.splice(index, 0, child.Id);
     }

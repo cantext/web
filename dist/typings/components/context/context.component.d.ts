@@ -1,21 +1,21 @@
 import { HyperComponent } from "@hypertype/ui";
 import { Observable } from "@hypertype/core";
 import { Context } from "../../model/context";
-import { IdPath } from "../../model/base/id";
-import { Root } from "../../model/root";
+import { Path } from "../../model/base/id";
+import { ContextTree } from "../../model/contextTree";
 import { SelectionStore } from "../../store/selection.store";
 export declare class ContextComponent extends HyperComponent<IState> {
     private selectionStore;
     private root;
-    constructor(selectionStore: SelectionStore, root: Root);
-    path$: Observable<IdPath>;
-    private path;
-    private contextInitial$;
+    constructor(selectionStore: SelectionStore, root: ContextTree);
+    path$: Observable<Path>;
+    private id$;
     private context$;
     private IsSelected$;
     State$: Observable<{
         context: Context;
         isSelected: boolean;
+        path: string[];
         state: any[];
     }>;
     private Editor$;
@@ -24,6 +24,7 @@ export declare class ContextComponent extends HyperComponent<IState> {
 interface IState {
     state: ('empty' | 'collapsed')[];
     context: Context;
+    path: Path;
     isSelected: boolean;
 }
 export {};
