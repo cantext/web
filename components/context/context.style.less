@@ -5,12 +5,13 @@ app-context {
   .body{
     box-sizing: border-box;
     height: 2em;
+    display: flex;
   }
-
-  .selected > .body{
-    //border: .2em solid #bda;
-
-  }
+  //
+  //.selected > .body{
+  //  border: .2em solid #bda;
+  //
+  //}
 
   .arrow{
     display: inline-block;
@@ -41,5 +42,17 @@ app-context {
   [contenteditable]:focus{
     border: none;
     outline: none;
+  }
+
+  .editor{
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    max-width: 100%;
+    display: inline-block;
+    flex: 1;
   }
 }

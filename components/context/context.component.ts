@@ -14,7 +14,8 @@ import {
     tap,
     fromEvent,
     first,
-    withLatestFrom
+    withLatestFrom,
+    debounceTime
 } from "@hypertype/core";
 import {RootStore} from "../../store/RootStore";
 import {Context} from "../../model/context";
@@ -36,11 +37,11 @@ import {SelectionStore} from "../../store/selection.store";
             <div class="${`context-inner ${state.state.join(' ')}`}">
                 <div class="body">
                     <span class="arrow"></span>
-                    <span id=${`editor`} 
-                          onclick="${events.focus(e => e)}" 
-                          contenteditable="true">
-                        ${context.toString()}
-                    </span>
+                    <div contenteditable="true" class="editor" 
+                          onclick="${events.click(e => e)}"
+                          oninput="${events.text(e => e.target.textContent)}">
+                          ${context.toString()}
+                        </div>
                 </div>
                 <div class="children">
                 ${isCollapsed ? '' : context.Children.map(child => 
@@ -80,12 +81,14 @@ export class ContextComponent extends HyperComponent<IState> {
         this.root.Cursor.Path$,
         this.path$,
     ]).pipe(
+        tap(console.log),
         map(([cursorPath, currentPath]) => {
             if (!cursorPath || !currentPath)
                 return false;
-            return cursorPath == currentPath;
+            return cursorPath.join(':') == currentPath.join(':');
         }),
         distinctUntilChanged(),
+        tap((sel)=>console.log(sel, this)),
         shareReplay(1),
     );
 
@@ -106,9 +109,13 @@ export class ContextComponent extends HyperComponent<IState> {
     );
 
     private Editor$ = combineLatest([this.Element$, this.context$]).pipe(
+        debounceTime(0),
+        map(([element, context]) => {
+            const editor = element.querySelector(`.editor`) as HTMLElement
+            return editor;
+        }),
+        filter(Fn.Ib),
         first(),
-        map(([element, context]) =>
-            element.querySelector(`#editor`) as HTMLElement)
     );
 
     public Actions$ = merge(
@@ -120,10 +127,18 @@ export class ContextComponent extends HyperComponent<IState> {
             })
         ),
         this.Events$.pipe(
-            filter(e => e.type == 'focus'),
+            filter(e => e.type == 'click'),
             withLatestFrom(this.path$),
             tap(([, path]) => {
                 this.root.Cursor.SetPath(path);
+            })
+        ),
+        this.Events$.pipe(
+            filter(e => e.type == 'text'),
+            map(e => e.args),
+            withLatestFrom(this.context$),
+            tap(([text, context]) => {
+                context.SetText(text);
             })
         )
     ).pipe(

@@ -41,12 +41,12 @@ class SelectionActions extends ActionsCreator<SelectionState> {
     }
 
     public Prev() {
-        this.root.Cursor.Path = this.root.Cursor.getTop();
+        this.root.Cursor.Path = this.root.Cursor.getTopMove();
         this.root.Update.next();
     }
 
     public Next() {
-        this.root.Cursor.Path = this.root.Cursor.getBottom();
+        this.root.Cursor.Path = this.root.Cursor.getBottomMove();
         this.root.Update.next();
     }
 

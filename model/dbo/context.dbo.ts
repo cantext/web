@@ -38,7 +38,7 @@ export enum RelationType {
 export type ISODate = string;
 
 export interface ContextDbo extends ILeaf<Id>{
-    Content: Content[];
+    Content: TextContent[];
     Time: ISODate;
 }
 

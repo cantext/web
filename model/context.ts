@@ -4,9 +4,13 @@ import {Id, Path} from "./base/id";
 import {ContextTree} from "./contextTree";
 import {Leaf} from "./base/leaf";
 import {Observable, ReplaySubject} from "rxjs";
-import {debounceTime, mapTo, shareReplay, startWith} from "@hypertype/core";
+import {debounceTime, mapTo, shareReplay, startWith, tap} from "@hypertype/core";
 
 export class Context extends Leaf<ContextDbo, Id> {
+    SetText(text: any) {
+        this.Value.Content[0].Text = text;
+        this.Update.next();
+    }
 
     Users: Map<User, RelationType> = new Map<User, RelationType>();
     Collapsed: boolean = false;
@@ -50,16 +54,22 @@ export class Context extends Leaf<ContextDbo, Id> {
         return this._pathToKey[str];
     }
 
-    public Move(from: Path, to: Path) {
-        const oldParentId = from[from.length - 2];
-        const [newParentId, after] = to.slice(-2);
+    public Move(from: Path, {parent: to, index}) {
+        const oldParentId = from[from.length - 1];
+        const newParentId = to[to.length - 1];
         const oldParent = this.tree.Items.get(oldParentId);
         const newParent = this.tree.Items.get(newParentId);
+        Object.keys(this._pathToKey).forEach(oldPath => {
+            const newPath = oldPath.replace(`:${oldParentId}:`, `:${newParentId}:`);
+            this._pathToKey[newPath] = this._pathToKey[oldPath];
+            delete this._pathToKey[oldPath];
+        });
+        this._pathToKey[[...to, this.Id].join(':')] = this._pathToKey[[...from, this.Id].join(':')]
         oldParent.RemoveChild(this);
-        const newIndex = newParent.Value.Children.indexOf(after) || 0;
-        newParent.InsertAt(this, newIndex);
+        newParent.InsertAt(this, index);
         newParent.Update.next();
         oldParent.Update.next();
+        this.Update.next();
     }
 
 
@@ -68,6 +78,7 @@ export class Context extends Leaf<ContextDbo, Id> {
         startWith(null),
         debounceTime(0),
         mapTo(this),
+        tap(console.log),
         shareReplay(1),
     );
 }

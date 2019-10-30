@@ -70,20 +70,35 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
     Move = {
         Left: () => {
             const id = this.Cursor.Path[this.Cursor.Path.length - 1];
-            this.Items.get(id).Move(this.Cursor.Path, this.Cursor.getLeft());
-            // this.MoveLeft();
+            const target = this.Cursor.getLeftMove();
+            if (!target)
+                return;
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
+            this.Cursor.SetPath([...target.parent,id]);
         },
         Right: () => {
             const id = this.Cursor.Path[this.Cursor.Path.length - 1];
-            this.Items.get(id).Move(this.Cursor.Path, this.Cursor.getRight());
+            const target = this.Cursor.getRightMove();
+            if (!target)
+                return;
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
+            this.Cursor.SetPath([...target.parent,id]);
         },
         Down: () => {
             const id = this.Cursor.Path[this.Cursor.Path.length - 1];
-            this.Items.get(id).Move(this.Cursor.Path, this.Cursor.getBottom());
+            const target = this.Cursor.getBottomMove();
+            if (!target)
+                return;
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
+            this.Cursor.SetPath([...target.parent,id]);
         },
         Up: () => {
             const id = this.Cursor.Path[this.Cursor.Path.length - 1];
-            this.Items.get(id).Move(this.Cursor.Path, this.Cursor.getTop());
+            const target = this.Cursor.getTopMove();
+            if (!target)
+                return;
+            this.Items.get(id).Move(this.Cursor.Path.slice(0, -1),target);
+            this.Cursor.SetPath([...target.parent,id]);
         }
     }
 
