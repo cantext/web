@@ -101,7 +101,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../model/contextTree */ "./model/contextTree.ts");
-/* harmony import */ var _store_selection_store__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../store/selection.store */ "./store/selection.store.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -114,11 +113,9 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 
-
 let ContextComponent = class ContextComponent extends _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["HyperComponent"] {
-    constructor(selectionStore, root) {
+    constructor(root) {
         super();
-        this.selectionStore = selectionStore;
         this.root = root;
         this.id$ = this.path$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(ids => ids[ids.length - 1]), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["distinctUntilChanged"])(), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["shareReplay"])(1));
         this.context$ = this.id$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["switchMap"])(id => this.root.Items.get(id).State$), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Fn"].Ib));
@@ -191,8 +188,7 @@ ContextComponent = __decorate([
         },
         style: __webpack_require__(/*! ./context.style.less */ "./components/context/context.style.less")
     }),
-    __metadata("design:paramtypes", [_store_selection_store__WEBPACK_IMPORTED_MODULE_3__["SelectionStore"],
-        _model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"]])
+    __metadata("design:paramtypes", [_model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"]])
 ], ContextComponent);
 
 
@@ -291,7 +287,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../model/contextTree */ "./model/contextTree.ts");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _store_selection_store__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../store/selection.store */ "./store/selection.store.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -304,12 +299,10 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 
-
 let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["HyperComponent"] {
-    constructor(root, selectionStore) {
+    constructor(root) {
         super();
         this.root = root;
-        this.selectionStore = selectionStore;
         this.State$ = this.root.State$;
         this.Actions$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["merge"])(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keydown').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])((event) => {
             switch (event.key) {
@@ -339,6 +332,14 @@ let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_
                     event.preventDefault();
                     event.shiftKey ? this.root.Move.Left() : this.root.Move.Right();
                     break;
+                case 'Enter':
+                    if (!event.shiftKey) {
+                        this.root.Add();
+                        event.preventDefault();
+                    }
+                    break;
+                default:
+                    console.log(event.key);
             }
         })), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keyup').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])(() => {
         })));
@@ -353,8 +354,7 @@ RootComponent = __decorate([
     `,
         style: __webpack_require__(/*! ./root.style.less */ "./components/root/root.style.less")
     }),
-    __metadata("design:paramtypes", [_model_contextTree__WEBPACK_IMPORTED_MODULE_1__["ContextTree"],
-        _store_selection_store__WEBPACK_IMPORTED_MODULE_3__["SelectionStore"]])
+    __metadata("design:paramtypes", [_model_contextTree__WEBPACK_IMPORTED_MODULE_1__["ContextTree"]])
 ], RootComponent);
 
 
@@ -486,8 +486,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @hypertype/infr-browser */ "./node_modules/@hypertype/infr-browser/dist/esm/index.js");
 /* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__);
 /* harmony import */ var _model_container__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../model/container */ "./model/container.ts");
-/* harmony import */ var _store_selection_store__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../store/selection.store */ "./store/selection.store.ts");
-
 
 
 
@@ -501,7 +499,7 @@ const app = _hypertype_app__WEBPACK_IMPORTED_MODULE_0__["ApplicationBuilder"]
     .withInfrustructure(_model_container__WEBPACK_IMPORTED_MODULE_8__["ContextDomainContainer"])
     .withInfrustructure(_hypertype_infr__WEBPACK_IMPORTED_MODULE_6__["InfrContainer"])
     .withInfrustructure(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__["BrowserContainer"])
-    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_2__["GoogleLoginComponent"], _components_root_root_component__WEBPACK_IMPORTED_MODULE_3__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_4__["ContextComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_5__["RootStore"], _store_selection_store__WEBPACK_IMPORTED_MODULE_9__["SelectionStore"]))
+    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_2__["GoogleLoginComponent"], _components_root_root_component__WEBPACK_IMPORTED_MODULE_3__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_4__["ContextComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_5__["RootStore"]))
     .build();
 // GoogleApi.Load().then((auth)=>{
 //     app.Provide({
@@ -539,15 +537,21 @@ class TreeCursor {
     isRoot(path) {
         return path.length == 1;
     }
-    getCurrent(path) {
+    getCurrent(path = this.Path) {
         const [currentId] = path.slice(-1);
         return this.tree.Items.get(currentId);
     }
-    getParent(path) {
+    getCurrentIndex(path = this.Path) {
+        const parent = this.getParent(path);
+        const current = this.getCurrent(path);
+        const index = parent.Value.Children.indexOf(current.Id);
+        return index;
+    }
+    getParent(path = this.Path) {
         const [parentId] = path.slice(-2);
         return this.tree.Items.get(parentId);
     }
-    getGrand(path) {
+    getGrand(path = this.Path) {
         const [grandId] = path.slice(-3);
         return this.tree.Items.get(grandId);
     }
@@ -566,12 +570,10 @@ class TreeCursor {
         if (this.isRoot(path))
             return null;
         const parent = this.getParent(path);
-        const current = this.getCurrent(path);
-        const index = parent.Value.Children.indexOf(current.Id);
+        const index = this.getCurrentIndex(path);
         if (index == 0)
             return null;
         const newParent = parent.Children[index - 1];
-        const lastChildId = newParent.Value.Children[newParent.Value.Children.length - 1];
         return {
             parent: [
                 ...path.slice(0, -1),
@@ -584,8 +586,7 @@ class TreeCursor {
         if (this.isRoot(path))
             return null;
         const parent = this.getParent(path);
-        const current = this.getCurrent(path);
-        const index = parent.Value.Children.indexOf(current.Id);
+        const index = this.getCurrentIndex(path);
         if (index > 0)
             return {
                 parent: path.slice(0, -1),
@@ -603,9 +604,8 @@ class TreeCursor {
     getBottomMove(path = this.Path) {
         if (this.isRoot(path))
             return null;
-        const [parentId, currentId] = path.slice(-2);
-        const parent = this.tree.Items.get(parentId);
-        const index = parent.Value.Children.indexOf(currentId);
+        const parent = this.getParent(path);
+        const index = this.getCurrentIndex(path);
         if (index < parent.Value.Children.length - 1)
             return {
                 parent: path.slice(0, -1),
@@ -638,9 +638,8 @@ class TreeCursor {
     getNextChild(path) {
         if (path.length == 1)
             return null;
-        const [parentId, currentId] = path.slice(-2);
-        const parent = this.tree.Items.get(parentId);
-        const index = parent.Value.Children.indexOf(currentId);
+        const parent = this.getParent(path);
+        const index = this.getCurrentIndex(path);
         if (index < parent.Value.Children.length - 1)
             return [
                 ...path.slice(0, -1),
@@ -651,9 +650,8 @@ class TreeCursor {
     GetUp(path = this.Path) {
         if (path.length == 1)
             return null;
-        const [parentId, currentId] = path.slice(-2);
-        const parent = this.tree.Items.get(parentId);
-        const index = parent.Value.Children.indexOf(currentId);
+        const parent = this.getParent(path);
+        const index = this.getCurrentIndex(path);
         if (index > 0)
             return this.getLastChild([
                 ...path.slice(0, -1),
@@ -971,8 +969,14 @@ class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
         this._pathToKey[[...to, this.Id].join(':')] = this._pathToKey[[...from, this.Id].join(':')];
         oldParent.RemoveChild(this);
         newParent.InsertAt(this, index);
-        newParent.Update.next();
-        oldParent.Update.next();
+        this.Update.next();
+    }
+    RemoveChild(child) {
+        super.RemoveChild(child);
+        this.Update.next();
+    }
+    InsertAt(child, index) {
+        super.InsertAt(child, index);
         this.Update.next();
     }
 }
@@ -991,25 +995,27 @@ class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ContextTree", function() { return ContextTree; });
 /* harmony import */ var _dbo_default__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dbo/default */ "./model/dbo/default.ts");
-/* harmony import */ var _base_tree__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/tree */ "./model/base/tree.ts");
-/* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./context */ "./model/context.ts");
-/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./user */ "./model/user.ts");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _base_id__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/id */ "./model/base/id.ts");
+/* harmony import */ var _base_tree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./base/tree */ "./model/base/tree.ts");
+/* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./context */ "./model/context.ts");
+/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./user */ "./model/user.ts");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__);
 
 
 
 
 
-class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_1__["Tree"] {
+
+class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_2__["Tree"] {
     constructor(dbo = Object(_dbo_default__WEBPACK_IMPORTED_MODULE_0__["DefaultData"])()) {
         super();
-        this.Update = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
-        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["debounceTime"])(0), 
+        this.Update = new _hypertype_core__WEBPACK_IMPORTED_MODULE_5__["ReplaySubject"](1);
+        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["debounceTime"])(0), 
         // tap(() => {
         //     console.log(...this.Root.flatMap(t => t.Path));
         // }),
-        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["shareReplay"])(1));
+        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["shareReplay"])(1));
         this.Move = {
             Left: () => {
                 const id = this.Cursor.Path[this.Cursor.Path.length - 1];
@@ -1045,13 +1051,13 @@ class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_1__["Tree"] {
             }
         };
         window['root'] = this;
-        this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new _user__WEBPACK_IMPORTED_MODULE_3__["User"](userDbo)]));
+        this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new _user__WEBPACK_IMPORTED_MODULE_4__["User"](userDbo)]));
         // const mainContextDbo = dbo.Contexts.find(c => c.Parents.length == 0);
         // const contextDboTree = treeMap<ContextDbo>(mainContextDbo, item => dbo.Contexts
         //     .filter(c => c.Parents.includes(item.Id)));
         // this.Root = contextDboTree.map(t => new Context(this, t));
         this.Items = new Map(dbo.Contexts
-            .map(dbo => [dbo.Id, new _context__WEBPACK_IMPORTED_MODULE_2__["Context"](this, dbo)]));
+            .map(dbo => [dbo.Id, new _context__WEBPACK_IMPORTED_MODULE_3__["Context"](this, dbo)]));
         this.Root = this.Items.get(dbo.Root);
         this.SetParents();
         dbo.Relations.forEach(relation => {
@@ -1072,6 +1078,19 @@ class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_1__["Tree"] {
     }
     get Children() {
         return [this.Root];
+    }
+    Add() {
+        const context = new _context__WEBPACK_IMPORTED_MODULE_3__["Context"](this, {
+            Content: [{ Text: '' }],
+            Children: [],
+            Id: Object(_base_id__WEBPACK_IMPORTED_MODULE_1__["Id"])(),
+            Time: null
+        });
+        this.Items.set(context.Id, context);
+        const parent = this.Cursor.getParent();
+        parent.InsertAt(context, this.Cursor.getCurrentIndex() + 1);
+        parent.Update.next();
+        this.Cursor.Down();
     }
 }
 
@@ -30830,152 +30849,6 @@ RootStore = __decorate([
 ], RootStore);
 
 class RootState {
-}
-
-
-/***/ }),
-
-/***/ "./store/selection.store.ts":
-/*!**********************************!*\
-  !*** ./store/selection.store.ts ***!
-  \**********************************/
-/*! exports provided: SelectionStore, SelectionState */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SelectionStore", function() { return SelectionStore; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SelectionState", function() { return SelectionState; });
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../model/contextTree */ "./model/contextTree.ts");
-/* harmony import */ var _RootStore__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./RootStore */ "./store/RootStore.ts");
-var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (undefined && undefined.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-let SelectionStore = class SelectionStore extends _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["ObservableStore"] {
-    constructor(rootStore, root) {
-        super(rootStore, 'select');
-        this.root = root;
-        this.Actions = new SelectionActions(this.root);
-        this.reducer = new SelectionReducer(this.root);
-    }
-};
-SelectionStore = __decorate([
-    Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])(),
-    __metadata("design:paramtypes", [_RootStore__WEBPACK_IMPORTED_MODULE_3__["RootStore"], _model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"]])
-], SelectionStore);
-
-class SelectionState {
-}
-var Actions;
-(function (Actions) {
-    Actions[Actions["right"] = 0] = "right";
-    Actions[Actions["left"] = 1] = "left";
-    Actions[Actions["prev"] = 2] = "prev";
-    Actions[Actions["next"] = 3] = "next";
-    Actions[Actions["up"] = 4] = "up";
-    Actions[Actions["down"] = 5] = "down";
-})(Actions || (Actions = {}));
-class SelectionActions extends _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["ActionsCreator"] {
-    constructor(root) {
-        super();
-        this.root = root;
-    }
-    Path(path) {
-        this.root.Cursor.Path = path;
-    }
-    Prev() {
-        this.root.Cursor.Path = this.root.Cursor.getTopMove();
-        this.root.Update.next();
-    }
-    Next() {
-        this.root.Cursor.Path = this.root.Cursor.getBottomMove();
-        this.root.Update.next();
-    }
-    MoveLeft() {
-        this.Custom(Actions.left);
-    }
-    MoveRight() {
-        this.Custom(Actions.right);
-    }
-    MoveUp() {
-        this.Custom(Actions.up);
-    }
-    MoveDown() {
-        this.Custom(Actions.down);
-    }
-    Custom(type, payload) {
-        return this.Action({
-            type: Actions[type],
-            payload
-        });
-    }
-}
-class SelectionReducer {
-    constructor(tree) {
-        this.tree = tree;
-        this.objectReducer = (state, action) => {
-            if (!state.Path)
-                state.Path = this.tree.Root.Id;
-            const path = state.Path.split(':');
-            const selectedContext = this.tree.Items.get(state.Path.split(':').pop());
-            switch (Actions[action.type]) {
-                /*case Actions.left:
-                    this.tree.Move.Left(path);
-                    return {
-                        Path: selectedContext.Path.join(':'),
-                        Key: selectedContext.Key,
-                    };
-                case Actions.right:
-                    selectedContext.Actions.Move.Right();
-                    return {
-                        Path: selectedContext.Path.join(':'),
-                        Key: selectedContext.Key,
-                    };
-                case Actions.up:
-                    selectedContext.Actions.Move.Up();
-                    return {
-                        Path: selectedContext.Path.join(':'),
-                        Key: selectedContext.Key,
-                    };
-                case Actions.down:
-                    selectedContext.Actions.Move.Down();
-                    return {
-                        Path: selectedContext.Path.join(':'),
-                        Key: selectedContext.Key,
-                    };
-                case Actions.prev:
-                    if (!selectedContext.Prev)
-                        return state;
-                    return {
-                        Path: selectedContext.Prev.Path.join(':'),
-                        Key: selectedContext.Prev.Key,
-                    };
-                case Actions.next:
-                    if (!selectedContext.Next)
-                        return state;
-                    return {
-                        Path: selectedContext.Next.Path.join(':'),
-                        Key: selectedContext.Next.Key,
-                    };*/
-            }
-            return state;
-        };
-        this.reduce = Object(_hypertype_app__WEBPACK_IMPORTED_MODULE_1__["objectReducer"])(this.objectReducer);
-    }
 }
 
 

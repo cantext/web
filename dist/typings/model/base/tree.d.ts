@@ -1,5 +1,6 @@
 import { Id } from "./id";
 import { Leaf } from "./leaf";
+import { TreeCursor } from "./cursor";
 export interface ILeaf<TKey> {
     Id: TKey;
     Children: TKey[];
@@ -9,5 +10,5 @@ export declare abstract class Tree<TLeaf extends Leaf<TValue, TKey>, TValue exte
     abstract readonly Items: Map<TKey, TLeaf>;
     private readonly Leafs;
     SetParents(): void;
-    Cursor: any;
+    Cursor: TreeCursor<TLeaf, TValue, TKey>;
 }

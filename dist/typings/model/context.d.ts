@@ -21,4 +21,6 @@ export declare class Context extends Leaf<ContextDbo, Id> {
     }): void;
     Update: ReplaySubject<void>;
     State$: Observable<Context>;
+    RemoveChild(child: this): void;
+    InsertAt(child: this, index: any): void;
 }
