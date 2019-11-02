@@ -86,6 +86,66 @@
 /************************************************************************/
 /******/ ({
 
+/***/ "./components/context/context-content.element.ts":
+/*!*******************************************************!*\
+  !*** ./components/context/context-content.element.ts ***!
+  \*******************************************************/
+/*! exports provided: ContextContentElement */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ContextContentElement", function() { return ContextContentElement; });
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__);
+
+class ContextContentElement extends HTMLElement {
+    constructor() {
+        super();
+        this.disconnect$ = new _hypertype_core__WEBPACK_IMPORTED_MODULE_0__["ReplaySubject"]();
+        this.Input$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["merge"])(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["fromEvent"])(this, 'input').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["tap"])(() => this.Context.SetText(this.innerText))), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["fromEvent"])(this, 'focus').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["tap"])(() => this.Context.Focus(this.Path)))).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["takeUntil"])(this.disconnect$.asObservable()));
+    }
+    connectedCallback() {
+        this.contentEditable = 'true';
+        this.className = 'editor';
+        this.Subscribe();
+    }
+    disconnectedCallback() {
+        this.disconnect$.next();
+        this.disconnect$.complete();
+    }
+    Subscribe() {
+        this.Input$.subscribe();
+    }
+    Update() {
+        const text = this.innerText;
+        const newText = this.Context.toString();
+        if (text == newText) {
+        }
+        else {
+            this.innerText = newText;
+        }
+    }
+    static For(context, path) {
+        const key = context.getKey(path);
+        if (!this.map.has(key)) {
+            const div = document.createElement('context-content', {
+                is: 'div'
+            });
+            div.Context = context;
+            div.Path = path;
+            this.map.set(key, div);
+        }
+        const div = this.map.get(key);
+        div.Update();
+        return div;
+    }
+}
+ContextContentElement.map = new Map();
+
+
+/***/ }),
+
 /***/ "./components/context/context.component.ts":
 /*!*************************************************!*\
   !*** ./components/context/context.component.ts ***!
@@ -101,6 +161,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../model/contextTree */ "./model/contextTree.ts");
+/* harmony import */ var _context_content_element__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./context-content.element */ "./components/context/context-content.element.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -113,6 +174,8 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 
+
+customElements.define('context-content', _context_content_element__WEBPACK_IMPORTED_MODULE_3__["ContextContentElement"]);
 let ContextComponent = class ContextComponent extends _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["HyperComponent"] {
     constructor(root) {
         super();
@@ -122,11 +185,15 @@ let ContextComponent = class ContextComponent extends _hypertype_ui__WEBPACK_IMP
         this.IsSelected$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["combineLatest"])([
             this.root.Cursor.Path$,
             this.path$,
-        ]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(console.log), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([cursorPath, currentPath]) => {
+        ]).pipe(
+        // tap(console.log),
+        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(([cursorPath, currentPath]) => {
             if (!cursorPath || !currentPath)
                 return false;
             return cursorPath.join(':') == currentPath.join(':');
-        }), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["distinctUntilChanged"])(), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])((sel) => console.log(sel, this)), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["shareReplay"])(1));
+        }), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["distinctUntilChanged"])(), 
+        // tap((sel)=>console.log(sel, this)),
+        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["shareReplay"])(1));
         this.State$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["combineLatest"])([
             this.context$,
             this.path$,
@@ -150,6 +217,7 @@ let ContextComponent = class ContextComponent extends _hypertype_ui__WEBPACK_IMP
         })), this.Events$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(e => e.type == 'click'), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["withLatestFrom"])(this.path$), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(([, path]) => {
             this.root.Cursor.SetPath(path);
         })), this.Events$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["filter"])(e => e.type == 'text'), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["map"])(e => e.args), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["withLatestFrom"])(this.context$), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["tap"])(([text, context]) => {
+            console.log(text);
             context.SetText(text);
         }))).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["mapTo"])(null));
     }
@@ -172,11 +240,7 @@ ContextComponent = __decorate([
             <div class="${`context-inner ${state.state.join(' ')}`}">
                 <div class="body">
                     <span class="arrow"></span>
-                    <div contenteditable="true" class="editor" 
-                          onclick="${events.click(e => e)}"
-                          oninput="${events.text(e => e.target.textContent)}">
-                          ${context.toString()}
-                        </div>
+                    ${_context_content_element__WEBPACK_IMPORTED_MODULE_3__["ContextContentElement"].For(context, state.path)}
                 </div>
                 <div class="children">
                 ${isCollapsed ? '' : context.Children.map(child => Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"])(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"], `context${child.getKey([...state.path, child.Id])}`) `
@@ -339,7 +403,7 @@ let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_
                     }
                     break;
                 default:
-                    console.log(event.key);
+                // console.log(event.key)
             }
         })), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keyup').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])(() => {
         })));
@@ -474,18 +538,19 @@ class GoogleApi {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _components_google_login_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/google-login.component */ "./components/google-login.component.ts");
-/* harmony import */ var _components_root_root_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/root/root.component */ "./components/root/root.component.ts");
-/* harmony import */ var _components_context_context_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../components/context/context.component */ "./components/context/context.component.ts");
-/* harmony import */ var _store_RootStore__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../store/RootStore */ "./store/RootStore.ts");
-/* harmony import */ var _hypertype_infr__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @hypertype/infr */ "./node_modules/@hypertype/infr/dist/esm/common/index.js");
-/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @hypertype/infr-browser */ "./node_modules/@hypertype/infr-browser/dist/esm/index.js");
-/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var _model_container__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../model/container */ "./model/container.ts");
+/* harmony import */ var _google_api__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./google-api */ "./entry/google-api.ts");
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _components_google_login_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/google-login.component */ "./components/google-login.component.ts");
+/* harmony import */ var _components_root_root_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../components/root/root.component */ "./components/root/root.component.ts");
+/* harmony import */ var _components_context_context_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../components/context/context.component */ "./components/context/context.component.ts");
+/* harmony import */ var _store_RootStore__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../store/RootStore */ "./store/RootStore.ts");
+/* harmony import */ var _hypertype_infr__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @hypertype/infr */ "./node_modules/@hypertype/infr/dist/esm/common/index.js");
+/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @hypertype/infr-browser */ "./node_modules/@hypertype/infr-browser/dist/esm/index.js");
+/* harmony import */ var _hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var _model_container__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../model/container */ "./model/container.ts");
 
 
 
@@ -495,20 +560,21 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const app = _hypertype_app__WEBPACK_IMPORTED_MODULE_0__["ApplicationBuilder"]
-    .withInfrustructure(_model_container__WEBPACK_IMPORTED_MODULE_8__["ContextDomainContainer"])
-    .withInfrustructure(_hypertype_infr__WEBPACK_IMPORTED_MODULE_6__["InfrContainer"])
-    .withInfrustructure(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_7__["BrowserContainer"])
-    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_2__["GoogleLoginComponent"], _components_root_root_component__WEBPACK_IMPORTED_MODULE_3__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_4__["ContextComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_5__["RootStore"]))
+
+const app = _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["ApplicationBuilder"]
+    .withInfrustructure(_model_container__WEBPACK_IMPORTED_MODULE_9__["ContextDomainContainer"])
+    .withInfrustructure(_hypertype_infr__WEBPACK_IMPORTED_MODULE_7__["InfrContainer"])
+    .withInfrustructure(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__["BrowserContainer"])
+    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_3__["GoogleLoginComponent"], _components_root_root_component__WEBPACK_IMPORTED_MODULE_4__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_5__["ContextComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_6__["RootStore"]))
     .build();
-// GoogleApi.Load().then((auth)=>{
-//     app.Provide({
-//         provide: GoogleApiAuth,
-//         useValue: auth
-//     });
-app.Init();
-app.get(_hypertype_app__WEBPACK_IMPORTED_MODULE_0__["RootStore"]).createStore();
-// });
+_google_api__WEBPACK_IMPORTED_MODULE_0__["GoogleApi"].Load().then((auth) => {
+    app.Provide({
+        provide: _google_api__WEBPACK_IMPORTED_MODULE_0__["GoogleApiAuth"],
+        useValue: auth
+    });
+    app.Init();
+    app.get(_hypertype_app__WEBPACK_IMPORTED_MODULE_1__["RootStore"]).createStore();
+});
 // 1. Load the JavaScript client library.
 
 
@@ -616,7 +682,7 @@ class TreeCursor {
     SetPath(path) {
         if (path == null)
             return;
-        console.log(path);
+        // console.log(path);
         this.Path = path;
         this.Update.next(this.Path);
     }
@@ -930,7 +996,9 @@ class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
         // }
         this._pathToKey = {};
         this.Update = new rxjs__WEBPACK_IMPORTED_MODULE_2__["ReplaySubject"](1);
-        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["startWith"])(null), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["debounceTime"])(0), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["tap"])(console.log), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["shareReplay"])(1));
+        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["startWith"])(null), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["debounceTime"])(0), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["mapTo"])(this), 
+        // tap(console.log),
+        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["shareReplay"])(1));
         this.tree = tree;
         this.Value = dbo;
     }
@@ -978,6 +1046,9 @@ class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
     InsertAt(child, index) {
         super.InsertAt(child, index);
         this.Update.next();
+    }
+    Focus(path) {
+        this.tree.Cursor.SetPath(path);
     }
 }
 

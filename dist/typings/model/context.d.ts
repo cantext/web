@@ -23,4 +23,5 @@ export declare class Context extends Leaf<ContextDbo, Id> {
     State$: Observable<Context>;
     RemoveChild(child: this): void;
     InsertAt(child: this, index: any): void;
+    Focus(path: Path): void;
 }
