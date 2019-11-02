@@ -22,10 +22,9 @@ export class GoogleLoginComponent extends HyperComponent {
 
     public State$: Observable<IGoogleUser> = this.auth.isSignedIn$.pipe(
         switchMap(isLoggedIn => isLoggedIn ?
-            this.auth.getMessages() :
+            this.auth.getUser() :
             Promise.resolve(null as IGoogleUser))
     );
-
 
     public Events = {
         login: () => {

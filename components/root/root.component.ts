@@ -13,11 +13,11 @@ import {fromEvent, Injectable, merge, tap} from "@hypertype/core";
 })
 export class RootComponent extends HyperComponent<ContextTree> {
 
-    constructor(private root: ContextTree) {
+    constructor(private tree: ContextTree) {
         super();
     }
 
-    public State$ = this.root.State$;
+    public State$ = this.tree.State$;
 
     public Actions$ = merge(
         fromEvent(document, 'keydown').pipe(
@@ -25,33 +25,43 @@ export class RootComponent extends HyperComponent<ContextTree> {
                 switch (event.key) {
                     case 'ArrowUp':
                         event.preventDefault();
-                        if (event.ctrlKey)
-                            this.root.Move.Up();
-                        else
-                            this.root.Cursor.Up();
+                        if (event.shiftKey && event.ctrlKey)
+                            this.tree.Move.Up();
+                        else if (event.ctrlKey)
+                            this.tree.Cursor.Up();
                         break;
                     case 'ArrowDown':
                         event.preventDefault();
-                        if (event.ctrlKey)
-                            this.root.Move.Down();
-                        else
-                            this.root.Cursor.Down();
+                        if (event.shiftKey && event.ctrlKey)
+                            this.tree.Move.Down();
+                        else if (event.ctrlKey)
+                            this.tree.Cursor.Down();
                         break;
                     case 'ArrowLeft':
-                        if (event.ctrlKey)
-                            this.root.Move.Left();
+                        if (event.shiftKey && event.ctrlKey)
+                            this.tree.Move.Left();
                         break;
                     case 'ArrowRight':
-                        if (event.ctrlKey)
-                            this.root.Move.Right();
+                        if (event.shiftKey && event.ctrlKey)
+                            this.tree.Move.Right();
+                        break;
+                    case 'Delete':
+                        if (event.shiftKey)
+                            this.tree.Delete()
                         break;
                     case 'Tab':
                         event.preventDefault();
-                        event.shiftKey ? this.root.Move.Left() : this.root.Move.Right();
+                        event.shiftKey ? this.tree.Move.Left() : this.tree.Move.Right();
                         break;
                     case 'Enter':
                         if (!event.shiftKey){
-                            this.root.Add();
+                            this.tree.Add();
+                            event.preventDefault();
+                        }
+                        break;
+                    case 'Delete':
+                        if (event.shiftKey){
+                            this.tree.Add();
                             event.preventDefault();
                         }
                         break;

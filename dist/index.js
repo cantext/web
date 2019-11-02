@@ -414,6 +414,7 @@ RootComponent = __decorate([
     Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["Component"])({
         name: 'app-root',
         template: (html, root) => html `
+        <google-login></google-login>
         <app-context path="${[root.Root.Id]}"></app-context>
     `,
         style: __webpack_require__(/*! ./root.style.less */ "./components/root/root.style.less")
@@ -567,7 +568,7 @@ const app = _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["ApplicationBuilder"]
     .withInfrustructure(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__["BrowserContainer"])
     .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_3__["GoogleLoginComponent"], _components_root_root_component__WEBPACK_IMPORTED_MODULE_4__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_5__["ContextComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_6__["RootStore"]))
     .build();
-_google_api__WEBPACK_IMPORTED_MODULE_0__["GoogleApi"].Load().then((auth) => {
+_google_api__WEBPACK_IMPORTED_MODULE_0__["GoogleApi"].Load().catch(e => null).then((auth) => {
     app.Provide({
         provide: _google_api__WEBPACK_IMPORTED_MODULE_0__["GoogleApiAuth"],
         useValue: auth

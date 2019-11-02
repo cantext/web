@@ -6,6 +6,13 @@ import {ContextDbo, ContextState, RootDbo} from "./dbo/context.dbo";
 import {User} from "./user";
 import {debounceTime, mapTo, Observable, ReplaySubject, shareReplay} from "@hypertype/core";
 
+
+class LocalStorage {
+    public static Add = (target, key, desc) => {
+
+    }
+}
+
 export class ContextTree extends Tree<Context, ContextDbo, Id> {
 
     Items: Map<Id, Context>;
@@ -101,6 +108,7 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
         }
     };
 
+    @LocalStorage.Add
     Add() {
         const context = new Context(this, {
             Content: [{Text: ''}],
@@ -113,7 +121,10 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
         parent.InsertAt(context, this.Cursor.getCurrentIndex() + 1);
         parent.Update.next();
         this.Cursor.Down();
+        return context;
+    }
+
+    Delete() {
+        this.Cursor.getParent().RemoveChild(this.Cursor.getCurrent());
     }
 }
-
-
