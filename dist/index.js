@@ -305,7 +305,7 @@ let GoogleLoginComponent = class GoogleLoginComponent extends _hypertype_ui__WEB
         super();
         this.auth = auth;
         this.State$ = this.auth.isSignedIn$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["switchMap"])(isLoggedIn => isLoggedIn ?
-            this.auth.getMessages() :
+            this.auth.getUser() :
             Promise.resolve(null)));
         this.Events = {
             login: () => {
@@ -364,41 +364,51 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["HyperComponent"] {
-    constructor(root) {
+    constructor(tree) {
         super();
-        this.root = root;
-        this.State$ = this.root.State$;
+        this.tree = tree;
+        this.State$ = this.tree.State$;
         this.Actions$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["merge"])(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keydown').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])((event) => {
             switch (event.key) {
                 case 'ArrowUp':
                     event.preventDefault();
-                    if (event.ctrlKey)
-                        this.root.Move.Up();
-                    else
-                        this.root.Cursor.Up();
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Up();
+                    else if (event.ctrlKey)
+                        this.tree.Cursor.Up();
                     break;
                 case 'ArrowDown':
                     event.preventDefault();
-                    if (event.ctrlKey)
-                        this.root.Move.Down();
-                    else
-                        this.root.Cursor.Down();
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Down();
+                    else if (event.ctrlKey)
+                        this.tree.Cursor.Down();
                     break;
                 case 'ArrowLeft':
-                    if (event.ctrlKey)
-                        this.root.Move.Left();
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Left();
                     break;
                 case 'ArrowRight':
-                    if (event.ctrlKey)
-                        this.root.Move.Right();
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Right();
+                    break;
+                case 'Delete':
+                    if (event.shiftKey)
+                        this.tree.Delete();
                     break;
                 case 'Tab':
                     event.preventDefault();
-                    event.shiftKey ? this.root.Move.Left() : this.root.Move.Right();
+                    event.shiftKey ? this.tree.Move.Left() : this.tree.Move.Right();
                     break;
                 case 'Enter':
                     if (!event.shiftKey) {
-                        this.root.Add();
+                        this.tree.Add();
+                        event.preventDefault();
+                    }
+                    break;
+                case 'Delete':
+                    if (event.shiftKey) {
+                        this.tree.Add();
                         event.preventDefault();
                     }
                     break;
@@ -1073,12 +1083,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./user */ "./model/user.ts");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__);
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 
 
 
 
 
 
+class LocalStorage {
+}
+LocalStorage.Add = (target, key, desc) => {
+};
 class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_2__["Tree"] {
     constructor(dbo = Object(_dbo_default__WEBPACK_IMPORTED_MODULE_0__["DefaultData"])()) {
         super();
@@ -1163,8 +1186,18 @@ class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_2__["Tree"] {
         parent.InsertAt(context, this.Cursor.getCurrentIndex() + 1);
         parent.Update.next();
         this.Cursor.Down();
+        return context;
+    }
+    Delete() {
+        this.Cursor.getParent().RemoveChild(this.Cursor.getCurrent());
     }
 }
+__decorate([
+    LocalStorage.Add,
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ContextTree.prototype, "Add", null);
 
 
 /***/ }),

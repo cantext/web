@@ -20,5 +20,6 @@ export declare class ContextTree extends Tree<Context, ContextDbo, Id> {
         Down: () => void;
         Up: () => void;
     };
-    Add(): void;
+    Add(): Context;
+    Delete(): void;
 }
