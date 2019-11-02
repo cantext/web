@@ -6,6 +6,7 @@ import {fromEvent, Injectable, merge, tap} from "@hypertype/core";
 @Component({
     name: 'app-root',
     template: (html, root: ContextTree) => html`
+        <google-login></google-login>
         <app-context path="${[root.Root.Id]}"></app-context>
     `,
     style: require('./root.style.less')

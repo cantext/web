@@ -20,7 +20,7 @@ const app = ApplicationBuilder
         RootStore,
     ))
     .build();
-GoogleApi.Load().then((auth) => {
+GoogleApi.Load().catch(e=> null).then((auth) => {
     app.Provide({
         provide: GoogleApiAuth,
         useValue: auth
