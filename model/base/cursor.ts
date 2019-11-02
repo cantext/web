@@ -111,7 +111,7 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
     SetPath(path) {
         if (path == null)
             return;
-        console.log(path);
+        // console.log(path);
         this.Path = path;
         this.Update.next(this.Path);
     }

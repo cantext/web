@@ -1,8 +1,10 @@
 import {Component, HyperComponent, property, wire} from "@hypertype/ui";
 import {
     combineLatest,
+    debounceTime,
     distinctUntilChanged,
     filter,
+    first,
     Fn,
     Injectable,
     map,
@@ -12,15 +14,15 @@ import {
     shareReplay,
     switchMap,
     tap,
-    fromEvent,
-    first,
-    withLatestFrom,
-    debounceTime
+    withLatestFrom
 } from "@hypertype/core";
-import {RootStore} from "../../store/RootStore";
 import {Context} from "../../model/context";
 import {Path} from "../../model/base/id";
 import {ContextTree} from "../../model/contextTree";
+import {ContextContentElement} from "./context-content.element";
+
+
+customElements.define('context-content', ContextContentElement);
 
 @Injectable(true)
 @Component({
@@ -36,18 +38,14 @@ import {ContextTree} from "../../model/contextTree";
             <div class="${`context-inner ${state.state.join(' ')}`}">
                 <div class="body">
                     <span class="arrow"></span>
-                    <div contenteditable="true" class="editor" 
-                          onclick="${events.click(e => e)}"
-                          oninput="${events.text(e => e.target.textContent)}">
-                          ${context.toString()}
-                        </div>
+                    ${ContextContentElement.For(context, state.path)}
                 </div>
                 <div class="children">
-                ${isCollapsed ? '' : context.Children.map(child => 
-                    wire(wire, `context${child.getKey([...state.path,child.Id])}`)`
-                        <app-context path="${[...state.path,child.Id]}"></app-context>
+                ${isCollapsed ? '' : context.Children.map(child =>
+            wire(wire, `context${child.getKey([...state.path, child.Id])}`)`
+                        <app-context path="${[...state.path, child.Id]}"></app-context>
                     `
-                )}
+        )}
                 </div>
             </div>
         `
@@ -79,14 +77,14 @@ export class ContextComponent extends HyperComponent<IState> {
         this.root.Cursor.Path$,
         this.path$,
     ]).pipe(
-        tap(console.log),
+        // tap(console.log),
         map(([cursorPath, currentPath]) => {
             if (!cursorPath || !currentPath)
                 return false;
             return cursorPath.join(':') == currentPath.join(':');
         }),
         distinctUntilChanged(),
-        tap((sel)=>console.log(sel, this)),
+        // tap((sel)=>console.log(sel, this)),
         shareReplay(1),
     );
 
@@ -136,6 +134,7 @@ export class ContextComponent extends HyperComponent<IState> {
             map(e => e.args),
             withLatestFrom(this.context$),
             tap(([text, context]) => {
+                console.log(text);
                 context.SetText(text);
             })
         )

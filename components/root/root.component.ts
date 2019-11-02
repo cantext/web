@@ -55,7 +55,7 @@ export class RootComponent extends HyperComponent<ContextTree> {
                         }
                         break;
                     default:
-                        console.log(event.key)
+                        // console.log(event.key)
                 }
 
             })

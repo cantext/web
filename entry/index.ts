@@ -20,13 +20,13 @@ const app = ApplicationBuilder
         RootStore,
     ))
     .build();
-// GoogleApi.Load().then((auth)=>{
-//     app.Provide({
-//         provide: GoogleApiAuth,
-//         useValue: auth
-//     });
+GoogleApi.Load().then((auth) => {
+    app.Provide({
+        provide: GoogleApiAuth,
+        useValue: auth
+    });
     app.Init();
     app.get<AppRootStore>(AppRootStore).createStore();
-// });
+});
 
 // 1. Load the JavaScript client library.

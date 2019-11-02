@@ -76,7 +76,7 @@ export class Context extends Leaf<ContextDbo, Id> {
         startWith(null),
         debounceTime(0),
         mapTo(this),
-        tap(console.log),
+        // tap(console.log),
         shareReplay(1),
     );
 
@@ -88,5 +88,9 @@ export class Context extends Leaf<ContextDbo, Id> {
     InsertAt(child: this, index) {
         super.InsertAt(child, index);
         this.Update.next();
+    }
+
+    Focus(path: Path) {
+        this.tree.Cursor.SetPath(path);
     }
 }
