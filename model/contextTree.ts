@@ -4,7 +4,7 @@ import {Tree} from "./base/tree";
 import {Context} from "./context";
 import {ContextDbo, ContextState, RootDbo} from "./dbo/context.dbo";
 import {User} from "./user";
-import {debounceTime, mapTo, Observable, ReplaySubject, shareReplay} from "@hypertype/core";
+import {debounceTime, mapTo, Observable, ReplaySubject, shareReplay, utc} from "@hypertype/core";
 
 
 class LocalStorage {
@@ -14,6 +14,12 @@ class LocalStorage {
 }
 
 export class ContextTree extends Tree<Context, ContextDbo, Id> {
+
+    constructor() {
+        super();
+        window['root'] = this;
+    }
+
 
     Items: Map<Id, Context>;
     Root: Context;
@@ -29,9 +35,14 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
     UserMap: Map<Id, User>;
     CurrentUser: User;
 
-    constructor(dbo: RootDbo = DefaultData()) {
-        super();
-        window['root'] = this;
+    public Load(dbo?: RootDbo) {
+        if (!dbo){
+            this.Root = null;
+            this.UserMap = new Map();
+            this.Items = new Map();
+            this.Update.next();
+            return;
+        }
         this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new User(userDbo)]));
         // const mainContextDbo = dbo.Contexts.find(c => c.Parents.length == 0);
         // const contextDboTree = treeMap<ContextDbo>(mainContextDbo, item => dbo.Contexts
@@ -58,11 +69,31 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
                 context.Collapsed = state.Collapsed;
             });
 
-
         this.Update.next();
     }
 
+    public ToDbo(): RootDbo{
+        return  {
+            Root: this.Root.Id,
+            Contexts: Array.from(this.Items.values())
+                .map(ctx => ctx.Value),
+            Users: Array.from(this.UserMap.values())
+                .map(user => user.Data),
+            Relations: Array.from(this.Items.values())
+                .map(ctx => [...ctx.Users.entries()].map(([user, type]) => ({
+                    ContextId: ctx.Id,
+                    UserId: user.Data.Id,
+                    Type: type
+                })))
+                .flat(),
+            UserState: {
+                ContextsState: {}
+            }
+        }
+    }
+
     public Update = new ReplaySubject<void>(1);
+    public OnAdd = new ReplaySubject<Context>(1);
     public State$: Observable<ContextTree> = this.Update.pipe(
         debounceTime(0),
         // tap(() => {
@@ -108,23 +139,35 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
         }
     };
 
-    @LocalStorage.Add
     Add() {
         const context = new Context(this, {
             Content: [{Text: ''}],
             Children: [],
             Id: Id(),
-            Time: null
+            Time: utc().toISO()
         });
         this.Items.set(context.Id, context);
         const parent = this.Cursor.getParent();
         parent.InsertAt(context, this.Cursor.getCurrentIndex() + 1);
         parent.Update.next();
         this.Cursor.Down();
+        this.OnAdd.next(context);
         return context;
     }
 
     Delete() {
         this.Cursor.getParent().RemoveChild(this.Cursor.getCurrent());
     }
+
+
+    AddChild$ = new ReplaySubject<{
+        ParentId; ChildId; Index;
+    }>(1);
+    RemoveChild$ = new ReplaySubject<{
+        ParentId; Index;
+    }>(1);
+    ChangeText$ = new ReplaySubject<{
+        ContextId: Id;
+        Text: string;
+    }>(1);
 }

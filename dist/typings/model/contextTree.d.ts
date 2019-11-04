@@ -11,7 +11,7 @@ export declare class ContextTree extends Tree<Context, ContextDbo, Id> {
     readonly Children: Context[];
     UserMap: Map<Id, User>;
     CurrentUser: User;
-    constructor(dbo?: RootDbo);
+    Load(dbo?: RootDbo): void;
     Update: ReplaySubject<void>;
     State$: Observable<ContextTree>;
     Move: {

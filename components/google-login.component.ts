@@ -1,6 +1,7 @@
 import {Injectable, Observable, switchMap} from '@hypertype/core';
 import {Component, HyperComponent} from '@hypertype/ui';
-import {GoogleApiAuth, IGoogleUser} from "../entry/google-api";
+import {IGoogleUser} from "../google-api/google-api";
+import {AuthGoogleApi} from "../google-api/auth.google-api";
 
 @Injectable(true)
 @Component({
@@ -15,7 +16,7 @@ import {GoogleApiAuth, IGoogleUser} from "../entry/google-api";
 })
 export class GoogleLoginComponent extends HyperComponent {
 
-    constructor(private auth: GoogleApiAuth) {
+    constructor(private auth: AuthGoogleApi) {
         super();
     }
 

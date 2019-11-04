@@ -40,6 +40,8 @@
     "@hypertype/tools": "latest",
     "@hypertype/ui": "^3.0.5",
     "@types/gapi": "0.0.39",
+    "@types/gapi.client.drive": "^3.0.3",
+    "@types/gapi.client.sheets": "^4.0.2",
     "typescript": "^3.6.4"
   }
 }

@@ -1,13 +1,15 @@
-import {Component, HyperComponent} from "@hypertype/ui";
+import {Component, HyperComponent, wire} from "@hypertype/ui";
 import {ContextTree} from "../../model/contextTree";
 import {fromEvent, Injectable, merge, tap} from "@hypertype/core";
 
 @Injectable(true)
 @Component({
     name: 'app-root',
-    template: (html, root: ContextTree) => html`
+    template: (html, tree: ContextTree) =>  html`
         <google-login></google-login>
-        <app-context path="${[root.Root.Id]}"></app-context>
+        ${ tree.Root ? wire(wire, tree.Root.getKey([]))`
+            <app-context path="${[tree.Root.Id]}"></app-context>
+        ` : ''}
     `,
     style: require('./root.style.less')
 })

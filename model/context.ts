@@ -4,11 +4,16 @@ import {Id, Path} from "./base/id";
 import {ContextTree} from "./contextTree";
 import {Leaf} from "./base/leaf";
 import {Observable, ReplaySubject} from "rxjs";
-import {debounceTime, mapTo, shareReplay, startWith, tap} from "@hypertype/core";
+import {debounceTime, mapTo, shareReplay, startWith} from "@hypertype/core";
 
 export class Context extends Leaf<ContextDbo, Id> {
+
     SetText(text: any) {
         this.Value.Content[0].Text = text;
+        this.tree.ChangeText$.next({
+            ContextId: this.Id,
+            Text: text
+        });
         this.Update.next();
     }
 
@@ -21,6 +26,7 @@ export class Context extends Leaf<ContextDbo, Id> {
         super();
         this.tree = tree as any;
         this.Value = dbo;
+
     }
 
     public GetDbo() {
@@ -82,11 +88,22 @@ export class Context extends Leaf<ContextDbo, Id> {
 
 
     RemoveChild(child: this) {
+        const index = this.Value.Children.indexOf(child.Id);
         super.RemoveChild(child);
+        this.tree.RemoveChild$.next({
+            ParentId: this.Id,
+            Index: index
+        });
         this.Update.next();
     }
+
     InsertAt(child: this, index) {
         super.InsertAt(child, index);
+        this.tree.AddChild$.next({
+            ParentId: this.Id,
+            ChildId: child.Id,
+            Index: index
+        });
         this.Update.next();
     }
 
