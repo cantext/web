@@ -423,9 +423,11 @@ RootComponent = __decorate([
     Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Injectable"])(true),
     Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["Component"])({
         name: 'app-root',
-        template: (html, root) => html `
+        template: (html, tree) => html `
         <google-login></google-login>
-        <app-context path="${[root.Root.Id]}"></app-context>
+        ${tree.Root ? Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"])(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"], tree.Root.getKey([])) `
+            <app-context path="${[tree.Root.Id]}"></app-context>
+        ` : ''}
     `,
         style: __webpack_require__(/*! ./root.style.less */ "./components/root/root.style.less")
     }),
@@ -620,6 +622,13 @@ class DriveGoogleApi {
             return result.files;
         });
     }
+    Delete(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.filesApi.delete({
+                fileId: id
+            });
+        });
+    }
 }
 
 
@@ -699,16 +708,31 @@ class SheetGoogleApi {
     constructor() {
         this.api = gapi.client.sheets.spreadsheets;
     }
-    Create(name) {
+    Create(spreadsheet) {
         return __awaiter(this, void 0, void 0, function* () {
             const { result } = yield this.api.create({
-                resource: {
-                    properties: {
-                        title: name,
-                    }
-                }
+                resource: spreadsheet
             });
             return result;
+        });
+    }
+    Get(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { result, status } = yield this.api.get({
+                spreadsheetId: id,
+                includeGridData: true
+            });
+            return result;
+        });
+    }
+    Update(spreadsheetId, updates) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.api.batchUpdate({
+                spreadsheetId: spreadsheetId,
+                resource: {
+                    requests: updates
+                },
+            });
         });
     }
 }
@@ -1140,6 +1164,10 @@ class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
     }
     SetText(text) {
         this.Value.Content[0].Text = text;
+        this.tree.ChangeText$.next({
+            ContextId: this.Id,
+            Text: text
+        });
         this.Update.next();
     }
     GetDbo() {
@@ -1176,11 +1204,21 @@ class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
         this.Update.next();
     }
     RemoveChild(child) {
+        const index = this.Value.Children.indexOf(child.Id);
         super.RemoveChild(child);
+        this.tree.RemoveChild$.next({
+            ParentId: this.Id,
+            Index: index
+        });
         this.Update.next();
     }
     InsertAt(child, index) {
         super.InsertAt(child, index);
+        this.tree.AddChild$.next({
+            ParentId: this.Id,
+            ChildId: child.Id,
+            Index: index
+        });
         this.Update.next();
     }
     Focus(path) {
@@ -1201,23 +1239,12 @@ class Context extends _base_leaf__WEBPACK_IMPORTED_MODULE_1__["Leaf"] {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ContextTree", function() { return ContextTree; });
-/* harmony import */ var _dbo_default__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dbo/default */ "./model/dbo/default.ts");
-/* harmony import */ var _base_id__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/id */ "./model/base/id.ts");
-/* harmony import */ var _base_tree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./base/tree */ "./model/base/tree.ts");
-/* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./context */ "./model/context.ts");
-/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./user */ "./model/user.ts");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__);
-var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (undefined && undefined.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
+/* harmony import */ var _base_id__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./base/id */ "./model/base/id.ts");
+/* harmony import */ var _base_tree__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./base/tree */ "./model/base/tree.ts");
+/* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./context */ "./model/context.ts");
+/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./user */ "./model/user.ts");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__);
 
 
 
@@ -1227,15 +1254,16 @@ class LocalStorage {
 }
 LocalStorage.Add = (target, key, desc) => {
 };
-class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_2__["Tree"] {
+class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_1__["Tree"] {
     constructor() {
-        super(...arguments);
-        this.Update = new _hypertype_core__WEBPACK_IMPORTED_MODULE_5__["ReplaySubject"](1);
-        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["debounceTime"])(0), 
+        super();
+        this.Update = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
+        this.OnAdd = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
+        this.State$ = this.Update.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["debounceTime"])(0), 
         // tap(() => {
         //     console.log(...this.Root.flatMap(t => t.Path));
         // }),
-        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["shareReplay"])(1));
+        Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["mapTo"])(this), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["shareReplay"])(1));
         this.Move = {
             Left: () => {
                 const id = this.Cursor.Path[this.Cursor.Path.length - 1];
@@ -1270,6 +1298,10 @@ class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_2__["Tree"] {
                 this.Cursor.SetPath([...target.parent, id]);
             }
         };
+        this.AddChild$ = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
+        this.RemoveChild$ = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
+        this.ChangeText$ = new _hypertype_core__WEBPACK_IMPORTED_MODULE_4__["ReplaySubject"](1);
+        window['root'] = this;
     }
     get Parent() {
         return null;
@@ -1277,15 +1309,21 @@ class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_2__["Tree"] {
     get Children() {
         return [this.Root];
     }
-    Load(dbo = Object(_dbo_default__WEBPACK_IMPORTED_MODULE_0__["DefaultData"])()) {
-        window['root'] = this;
-        this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new _user__WEBPACK_IMPORTED_MODULE_4__["User"](userDbo)]));
+    Load(dbo) {
+        if (!dbo) {
+            this.Root = null;
+            this.UserMap = new Map();
+            this.Items = new Map();
+            this.Update.next();
+            return;
+        }
+        this.UserMap = new Map(dbo.Users.map(userDbo => [userDbo.Id, new _user__WEBPACK_IMPORTED_MODULE_3__["User"](userDbo)]));
         // const mainContextDbo = dbo.Contexts.find(c => c.Parents.length == 0);
         // const contextDboTree = treeMap<ContextDbo>(mainContextDbo, item => dbo.Contexts
         //     .filter(c => c.Parents.includes(item.Id)));
         // this.Root = contextDboTree.map(t => new Context(this, t));
         this.Items = new Map(dbo.Contexts
-            .map(dbo => [dbo.Id, new _context__WEBPACK_IMPORTED_MODULE_3__["Context"](this, dbo)]));
+            .map(dbo => [dbo.Id, new _context__WEBPACK_IMPORTED_MODULE_2__["Context"](this, dbo)]));
         this.Root = this.Items.get(dbo.Root);
         this.SetParents();
         dbo.Relations.forEach(relation => {
@@ -1301,30 +1339,44 @@ class ContextTree extends _base_tree__WEBPACK_IMPORTED_MODULE_2__["Tree"] {
         });
         this.Update.next();
     }
+    ToDbo() {
+        return {
+            Root: this.Root.Id,
+            Contexts: Array.from(this.Items.values())
+                .map(ctx => ctx.Value),
+            Users: Array.from(this.UserMap.values())
+                .map(user => user.Data),
+            Relations: Array.from(this.Items.values())
+                .map(ctx => [...ctx.Users.entries()].map(([user, type]) => ({
+                ContextId: ctx.Id,
+                UserId: user.Data.Id,
+                Type: type
+            })))
+                .flat(),
+            UserState: {
+                ContextsState: {}
+            }
+        };
+    }
     Add() {
-        const context = new _context__WEBPACK_IMPORTED_MODULE_3__["Context"](this, {
+        const context = new _context__WEBPACK_IMPORTED_MODULE_2__["Context"](this, {
             Content: [{ Text: '' }],
             Children: [],
-            Id: Object(_base_id__WEBPACK_IMPORTED_MODULE_1__["Id"])(),
-            Time: null
+            Id: Object(_base_id__WEBPACK_IMPORTED_MODULE_0__["Id"])(),
+            Time: Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_4__["utc"])().toISO()
         });
         this.Items.set(context.Id, context);
         const parent = this.Cursor.getParent();
         parent.InsertAt(context, this.Cursor.getCurrentIndex() + 1);
         parent.Update.next();
         this.Cursor.Down();
+        this.OnAdd.next(context);
         return context;
     }
     Delete() {
         this.Cursor.getParent().RemoveChild(this.Cursor.getCurrent());
     }
 }
-__decorate([
-    LocalStorage.Add,
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], ContextTree.prototype, "Add", null);
 
 
 /***/ }),
@@ -35530,6 +35582,233 @@ module.exports = function(module) {
 
 /***/ }),
 
+/***/ "./services/context.spreadsheet.ts":
+/*!*****************************************!*\
+  !*** ./services/context.spreadsheet.ts ***!
+  \*****************************************/
+/*! exports provided: ContextSpreadsheet */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ContextSpreadsheet", function() { return ContextSpreadsheet; });
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__);
+
+class ContextSpreadsheet {
+    constructor(spreadsheet, tree) {
+        this.spreadsheet = spreadsheet;
+        this.tree = tree;
+        this.OnNewContext$ = this.tree.OnAdd.asObservable().pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["map"])(ctx => [
+            ...this.addContext(ctx.Value)
+        ]));
+        this.Context$ = this.tree.OnAdd.asObservable().pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["map"])(ctx => [
+            ...this.addContext(ctx.Value)
+        ]));
+        this.RemoveChild$ = this.tree.RemoveChild$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["map"])(addChild => this.RemoveChildrenAt(addChild.ParentId, addChild.Index)));
+        this.AddChild$ = this.tree.AddChild$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["map"])(addChild => this.AddChildrenAt(addChild.ParentId, addChild.ChildId, addChild.Index)));
+        this.ChangeText$ = this.tree.ChangeText$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["map"])(changeText => this.ChangeText(changeText.ContextId, changeText.Text)));
+        this.initSheets();
+        if (!this.spreadsheet.properties)
+            this.spreadsheet.properties = {
+                title: 'context.xls'
+            };
+    }
+    initSheets() {
+        if (!this.spreadsheet.sheets)
+            this.spreadsheet.sheets = [];
+        this.ContextSheet = this.getOrCreateSheet('Contexts');
+        this.ContentSheet = this.getOrCreateSheet('Content');
+        this.UsersSheet = this.getOrCreateSheet('Users');
+        this.RelationSheet = this.getOrCreateSheet('Relations');
+    }
+    getOrCreateSheet(name) {
+        return this.spreadsheet.sheets
+            .find(s => s.properties.title == name) || (() => {
+            const sheet = ({
+                properties: {
+                    title: name
+                },
+                data: [{
+                        rowData: [],
+                    }]
+            });
+            this.spreadsheet.sheets.push(sheet);
+            return sheet;
+        })();
+    }
+    RemoveChildrenAt(parentId, index) {
+        const row = this.ContextSheet.data[0].rowData
+            .find(rd => this.contextRowToDbo(rd).Id == parentId);
+        const rowIndex = this.ContextSheet.data[0].rowData.indexOf(row);
+        return [{
+                "deleteRange": {
+                    range: {
+                        "sheetId": this.ContextSheet.properties.sheetId,
+                        "startRowIndex": rowIndex,
+                        "endRowIndex": rowIndex + 1,
+                        "startColumnIndex": 2 + index,
+                        "endColumnIndex": 3 + index
+                    },
+                    shiftDimension: "COLUMNS"
+                }
+            }];
+    }
+    AddChildrenAt(parentId, childId, index) {
+        const row = this.ContextSheet.data[0].rowData
+            .find(rd => this.contextRowToDbo(rd).Id == parentId);
+        const rowIndex = this.ContextSheet.data[0].rowData.indexOf(row);
+        return [{
+                "insertRange": {
+                    range: {
+                        "sheetId": this.ContextSheet.properties.sheetId,
+                        "startRowIndex": rowIndex,
+                        "endRowIndex": rowIndex + 1,
+                        "startColumnIndex": 2 + index,
+                        "endColumnIndex": 3 + index
+                    },
+                    shiftDimension: "COLUMNS"
+                }
+            }, {
+                "updateCells": {
+                    rows: [{
+                            values: [{ userEnteredValue: { stringValue: childId } }]
+                        }],
+                    fields: '*',
+                    range: {
+                        "sheetId": this.ContextSheet.properties.sheetId,
+                        "startRowIndex": rowIndex,
+                        "endRowIndex": rowIndex + 1,
+                        "startColumnIndex": 2 + index,
+                        "endColumnIndex": 3 + index
+                    },
+                }
+            }];
+    }
+    ChangeText(contextId, text) {
+        const row = this.ContentSheet.data[0].rowData
+            .find(rd => this.contextRowToDbo(rd).Id == contextId);
+        const rowIndex = this.ContentSheet.data[0].rowData.indexOf(row);
+        return [{
+                "updateCells": {
+                    rows: [{
+                            values: [{ userEnteredValue: { stringValue: text } }]
+                        }],
+                    fields: '*',
+                    range: {
+                        "sheetId": this.ContentSheet.properties.sheetId,
+                        "startRowIndex": rowIndex,
+                        "endRowIndex": rowIndex + 1,
+                        "startColumnIndex": 1,
+                        "endColumnIndex": 2
+                    },
+                }
+            }];
+    }
+    addContext(context) {
+        const contextRowData = {
+            values: [
+                { userEnteredValue: { stringValue: context.Id } },
+                { userEnteredValue: { stringValue: context.Time } },
+                ...context.Children.map(c => ({
+                    userEnteredValue: { stringValue: c }
+                }))
+            ]
+        };
+        this.ContextSheet.data[0].rowData.push(contextRowData);
+        const contentRowDatas = context.Content.map(content => {
+            const rowData = {
+                values: [
+                    { userEnteredValue: { stringValue: context.Id } },
+                    { userEnteredValue: { stringValue: content.Text } },
+                ]
+            };
+            this.ContentSheet.data[0].rowData.push(rowData);
+            return rowData;
+        });
+        return [{
+                "appendCells": {
+                    sheetId: this.ContextSheet.properties.sheetId,
+                    rows: [contextRowData],
+                    fields: "*"
+                }
+            }, {
+                "appendCells": {
+                    sheetId: this.ContentSheet.properties.sheetId,
+                    rows: contentRowDatas,
+                    fields: "*"
+                }
+            }];
+    }
+    addUser(user) {
+        this.UsersSheet.data[0].rowData.push({
+            values: [
+                { userEnteredValue: { stringValue: user.Id } },
+                { userEnteredValue: { stringValue: user.Email } },
+                { userEnteredValue: { stringValue: user.Name } },
+            ]
+        });
+    }
+    addRelation(relation) {
+        this.UsersSheet.data[0].rowData.push({
+            values: [
+                { userEnteredValue: { stringValue: relation.ContextId } },
+                { userEnteredValue: { stringValue: relation.UserId } },
+                { userEnteredValue: { stringValue: relation.Type } },
+            ]
+        });
+    }
+    Load(rootDbo) {
+        rootDbo.Contexts.forEach(context => this.addContext(context));
+        rootDbo.Users.forEach(user => this.addUser(user));
+        rootDbo.Relations.forEach(relation => this.addRelation(relation));
+    }
+    GetUpdates$() {
+        this.tree.Load(this.ToDbo());
+        return Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_0__["merge"])(this.OnNewContext$, this.AddChild$, this.RemoveChild$, this.ChangeText$);
+    }
+    contextRowToDbo(contextRow, contentRows = []) {
+        const context = {
+            Id: contextRow.values[0].userEnteredValue.stringValue,
+            Time: contextRow.values[1] && contextRow.values[1].userEnteredValue.stringValue,
+            Children: contextRow.values.slice(2).map(d => d.userEnteredValue.stringValue),
+        };
+        return Object.assign(Object.assign({}, context), { Content: contentRows
+                .filter(d => d.values[0].userEnteredValue.stringValue == context.Id)
+                .map(d => ({
+                Text: d.values[1].userEnteredValue && d.values[1].userEnteredValue.stringValue
+            })) });
+    }
+    ToDbo() {
+        const contexts = this.ContextSheet.data[0].rowData
+            .map(c => this.contextRowToDbo(c, this.ContentSheet.data[0].rowData));
+        const users = this.UsersSheet.data[0].rowData
+            .map(d => ({
+            Id: d.values[0].userEnteredValue.stringValue,
+            Email: d.values[1].userEnteredValue.stringValue,
+            Name: d.values[2].userEnteredValue.stringValue,
+        }));
+        const relations = this.RelationSheet.data[0].rowData
+            .map(d => ({
+            ContextId: d.values[0].userEnteredValue.stringValue,
+            UserId: d.values[1].userEnteredValue.stringValue,
+            Type: d.values[2].userEnteredValue.stringValue,
+        }));
+        return {
+            Root: contexts[0].Id,
+            Contexts: contexts,
+            Users: users,
+            Relations: relations,
+            UserState: {
+                ContextsState: {}
+            }
+        };
+    }
+}
+
+
+/***/ }),
+
 /***/ "./services/model.adapter.ts":
 /*!***********************************!*\
   !*** ./services/model.adapter.ts ***!
@@ -35545,6 +35824,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../model/contextTree */ "./model/contextTree.ts");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
 /* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _model_dbo_default__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../model/dbo/default */ "./model/dbo/default.ts");
+/* harmony import */ var _google_api_auth_google_api__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../google-api/auth.google-api */ "./google-api/auth.google-api.ts");
+/* harmony import */ var _context_spreadsheet__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./context.spreadsheet */ "./services/context.spreadsheet.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -35567,18 +35849,42 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
+
+
 let ModelAdapter = class ModelAdapter {
-    constructor(tree, sheetApi, driveApi) {
+    constructor(tree, sheetApi, authApi, driveApi) {
         this.tree = tree;
         this.sheetApi = sheetApi;
+        this.authApi = authApi;
         this.driveApi = driveApi;
     }
     init() {
         return __awaiter(this, void 0, void 0, function* () {
+            this.authApi.isSignedIn$.subscribe((isSigned) => __awaiter(this, void 0, void 0, function* () {
+                if (!isSigned) {
+                    this.tree.Load();
+                }
+                else {
+                    const sheet = yield this.getOrCreate();
+                    sheet.GetUpdates$().pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["bufferTime"])(3000), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["filter"])(arr => arr.length > 0)).subscribe(updates => {
+                        this.sheetApi.Update(sheet.spreadsheet.spreadsheetId, updates.flat());
+                    });
+                }
+            }));
+        });
+    }
+    getOrCreate() {
+        return __awaiter(this, void 0, void 0, function* () {
             const files = yield this.driveApi.List('context.xls');
             if (!files.length) {
-                const file = yield this.sheetApi.Create('context.xls');
+                const spreadsheet = {};
+                const tempContextSpreadsheet = new _context_spreadsheet__WEBPACK_IMPORTED_MODULE_6__["ContextSpreadsheet"](spreadsheet, this.tree);
+                tempContextSpreadsheet.Load(Object(_model_dbo_default__WEBPACK_IMPORTED_MODULE_4__["DefaultData"])());
+                yield this.sheetApi.Create(spreadsheet);
             }
+            const sheet = yield this.sheetApi.Get(files[0].id);
+            return new _context_spreadsheet__WEBPACK_IMPORTED_MODULE_6__["ContextSpreadsheet"](sheet, this.tree);
         });
     }
 };
@@ -35586,6 +35892,7 @@ ModelAdapter = __decorate([
     Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_3__["Injectable"])(),
     __metadata("design:paramtypes", [_model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"],
         _google_api_sheet_google_api__WEBPACK_IMPORTED_MODULE_0__["SheetGoogleApi"],
+        _google_api_auth_google_api__WEBPACK_IMPORTED_MODULE_5__["AuthGoogleApi"],
         _google_api_drive_google_api__WEBPACK_IMPORTED_MODULE_1__["DriveGoogleApi"]])
 ], ModelAdapter);
 
