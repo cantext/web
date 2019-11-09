@@ -1,5 +1,4 @@
 import {RelationType, RootDbo} from "./context.dbo";
-import {Id} from "../base/id";
 import {utc} from "@hypertype/core";
 
 const InititalData: () => RootDbo = () => ({
@@ -17,9 +16,7 @@ const InititalData: () => RootDbo = () => ({
     Users: [],
     Relations: [],
     UserState: {
-        ContextsState: {
-
-        }
+        ContextsState: {}
     }
 
 });
@@ -29,10 +26,18 @@ const DefaultDataTest1: () => RootDbo = () => ({
     Contexts: [
         {
             Id: '1',
-            Children: ['1.1', '1.2'],
+            Children: ['inbox', '1.1', '1.2'],
             Time: utc().toISO(),
             Content: [{
                 Text: '1 Контекст',
+            }]
+        },
+        {
+            Id: 'inbox',
+            Children: [],
+            Time: utc().toISO(),
+            Content: [{
+                Text: 'Inbox',
             }]
         },
         {

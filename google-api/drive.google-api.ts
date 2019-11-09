@@ -1,5 +1,5 @@
 export class DriveGoogleApi {
-    private filesApi = gapi.client['drive'].files;
+    private filesApi = gapi.client.drive.files;
 
 
     public async List(name) {

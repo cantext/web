@@ -4,7 +4,9 @@ import {Tree} from "./base/tree";
 import {Context} from "./context";
 import {ContextDbo, ContextState, RootDbo} from "./dbo/context.dbo";
 import {User} from "./user";
-import {debounceTime, mapTo, Observable, ReplaySubject, shareReplay, utc} from "@hypertype/core";
+import {debounceTime, Injectable, mapTo, Observable, ReplaySubject, shareReplay, utc} from "@hypertype/core";
+import {EmailGoogleApi} from "../google-api/email.google-api";
+import {AuthGoogleApi} from "../google-api/auth.google-api";
 
 
 class LocalStorage {
@@ -12,14 +14,18 @@ class LocalStorage {
 
     }
 }
-
+@Injectable()
 export class ContextTree extends Tree<Context, ContextDbo, Id> {
 
-    constructor() {
+    constructor(public email: EmailGoogleApi) {
         super();
         window['root'] = this;
+
     }
 
+    public async Send(to: string, content: string){
+        await this.email.Send(to, content);
+    }
 
     Items: Map<Id, Context>;
     Root: Context;
@@ -69,6 +75,11 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
                 context.Collapsed = state.Collapsed;
             });
 
+        if (this.Items.get('inbox')) {
+            const inbox = this.Items.get('inbox');
+            inbox.SetText(`Inbox (${this.email.me})`);
+            inbox.LoadEmails();
+        }
         this.Update.next();
     }
 
@@ -139,18 +150,20 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
         }
     };
 
-    Add() {
-        const context = new Context(this, {
+    Add(parent = this.Cursor.getParent(),
+        dbo = {
             Content: [{Text: ''}],
             Children: [],
             Id: Id(),
             Time: utc().toISO()
-        });
+        },
+        index = this.Cursor.getCurrentIndex() + 1) {
+        const context = new Context(this, dbo);
         this.Items.set(context.Id, context);
-        const parent = this.Cursor.getParent();
-        parent.InsertAt(context, this.Cursor.getCurrentIndex() + 1);
+        parent.InsertAt(context, index);
         parent.Update.next();
-        this.Cursor.Down();
+
+        this.Cursor.SetPath([this.Root.Id])
         this.OnAdd.next(context);
         return context;
     }
@@ -170,4 +183,10 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
         ContextId: Id;
         Text: string;
     }>(1);
+
+    switchCollapsed() {
+        const current = this.Cursor.getCurrent()
+        current.Collapsed = !current.Collapsed;
+        current.Update.next();
+    }
 }

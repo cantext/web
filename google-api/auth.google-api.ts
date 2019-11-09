@@ -1,18 +1,17 @@
-import {Observable} from "rxjs";
-import {startWith} from "rxjs/operators";
+import {distinctUntilChanged, Observable, startWith} from "@hypertype/core";
 import {IGoogleUser} from "./google-api";
 
 export class AuthGoogleApi {
 
     private authInstance = gapi['auth2'].getAuthInstance();
 
-    public async getUser(): Promise<IGoogleUser> {
-        const {result} = await gapi.client.request({
-            'path': 'https://people.googleapis.com/v1/people/me?requestMask.includeField=person.names',
-        });
+    public get User(): IGoogleUser {
+        const user = this.authInstance.currentUser.Ab.w3;
         return {
-            ...result.names[0],
-            metadata: undefined
+            givenName: user.ofa,
+            familyName: user.wea,
+            displayName: user.ig,
+            email: user.U3
         };
     }
 
@@ -40,7 +39,8 @@ export class AuthGoogleApi {
                 subscr.next(isLoggedIn)
             });
     }).pipe(
-        startWith(this.authInstance.isSignedIn.get())
+        startWith(this.authInstance.isSignedIn.get()),
+        distinctUntilChanged()
     );
 
     Logout() {

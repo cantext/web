@@ -68,7 +68,7 @@ export class ContextComponent extends HyperComponent<IState> {
         shareReplay(1)
     );
 
-    private context$ = this.id$.pipe(
+    private context$: Observable<Context> = this.id$.pipe(
         switchMap(id => this.root.Items.get(id).State$),
         filter(Fn.Ib),
     );

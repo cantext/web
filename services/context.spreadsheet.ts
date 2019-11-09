@@ -186,7 +186,7 @@ export class ContextSpreadsheet {
     }
 
     public addRelation(relation: RelationDbo) {
-        this.UsersSheet.data[0].rowData.push({
+        this.RelationSheet.data[0].rowData.push({
             values: [
                 {userEnteredValue: {stringValue: relation.ContextId}},
                 {userEnteredValue: {stringValue: relation.UserId}},

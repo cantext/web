@@ -67,6 +67,7 @@ export abstract class Leaf<TValue extends ILeaf<TKey>, TKey = Id> {
         this.Value.Children[index2] = temp;
     }
 
+    Collapsed: boolean = false;
     // protected MoveLeft(child: this) {
     //     const children = this.Children;
     //     children.indexOf(child);

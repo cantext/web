@@ -128,7 +128,7 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
 
     getLastChild(path: Path<TKey>) {
         const current = this.getCurrent(path);
-        if (current.Value.Children.length == 0)
+        if (current.Value.Children.length == 0 || current.Collapsed)
             return path;
         return this.getLastChild([
             ...path,
@@ -164,7 +164,7 @@ export class TreeCursor<TLeaf extends Leaf<TValue, TKey>,
 
     GetDown(path = this.Path) {
         const current = this.getCurrent(path);
-        if (current.Value.Children.length) {
+        if (current.Value.Children.length && !current.Collapsed) {
             return [
                 ...path,
                 current.Value.Children[0]

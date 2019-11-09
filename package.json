@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/cantext/web#readme",
   "dependencies": {
+    "@types/node": "^12.12.6",
     "chat-window": "0.0.5"
   },
   "hypertype": {
@@ -38,9 +39,10 @@
     "@hypertype/infr": "latest",
     "@hypertype/infr-browser": "latest",
     "@hypertype/tools": "latest",
-    "@hypertype/ui": "^3.0.5",
+    "@hypertype/ui": "latest",
     "@types/gapi": "0.0.39",
     "@types/gapi.client.drive": "^3.0.3",
+    "@types/gapi.client.gmail": "^1.0.1",
     "@types/gapi.client.sheets": "^4.0.2",
     "typescript": "^3.6.4"
   }

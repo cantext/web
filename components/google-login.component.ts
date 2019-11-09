@@ -1,4 +1,4 @@
-import {Injectable, Observable, switchMap} from '@hypertype/core';
+import {Injectable, Observable, switchMap, map} from '@hypertype/core';
 import {Component, HyperComponent} from '@hypertype/ui';
 import {IGoogleUser} from "../google-api/google-api";
 import {AuthGoogleApi} from "../google-api/auth.google-api";
@@ -22,9 +22,9 @@ export class GoogleLoginComponent extends HyperComponent {
 
 
     public State$: Observable<IGoogleUser> = this.auth.isSignedIn$.pipe(
-        switchMap(isLoggedIn => isLoggedIn ?
-            this.auth.getUser() :
-            Promise.resolve(null as IGoogleUser))
+        map(isLoggedIn => isLoggedIn ?
+            this.auth.User :
+            null)
     );
 
     public Events = {

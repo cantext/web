@@ -1,25 +1,30 @@
 import {Component, HyperComponent, wire} from "@hypertype/ui";
 import {ContextTree} from "../../model/contextTree";
-import {fromEvent, Injectable, merge, tap} from "@hypertype/core";
+import {fromEvent, Injectable, merge, tap, map, Observable} from "@hypertype/core";
+import {ModelAdapter} from "../../services/model.adapter";
 
 @Injectable(true)
 @Component({
     name: 'app-root',
-    template: (html, tree: ContextTree) =>  html`
+    template: (html, tree: ContextTree&{adapter: ModelAdapter}) =>  html`
         <google-login></google-login>
+        <button onclick="${tree.adapter.Clear}">Clear</button>
         ${ tree.Root ? wire(wire, tree.Root.getKey([]))`
             <app-context path="${[tree.Root.Id]}"></app-context>
         ` : ''}
     `,
     style: require('./root.style.less')
 })
-export class RootComponent extends HyperComponent<ContextTree> {
+export class RootComponent extends HyperComponent<ContextTree&{adapter: ModelAdapter}> {
 
-    constructor(private tree: ContextTree) {
+    constructor(private tree: ContextTree,
+                private adapter: ModelAdapter) {
         super();
     }
 
-    public State$ = this.tree.State$;
+    public State$: Observable<any> = this.tree.State$.pipe(
+        map(state => ({...state, adapter: this.adapter}))
+    );
 
     public Actions$ = merge(
         fromEvent(document, 'keydown').pipe(
@@ -67,6 +72,10 @@ export class RootComponent extends HyperComponent<ContextTree> {
                             event.preventDefault();
                         }
                         break;
+                    case '.':
+                    case 'ю':
+                        if (event.ctrlKey)
+                            this.tree.switchCollapsed();
                     default:
                         // console.log(event.key)
                 }

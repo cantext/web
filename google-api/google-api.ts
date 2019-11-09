@@ -6,7 +6,7 @@ export interface IGoogleUser {
     displayName: string;
     familyName: string;
     givenName: string;
-    displayNameLastFirst: string;
+    email: string;
 }
 
 
@@ -14,12 +14,17 @@ export class GoogleApi {
     private static DISCOVERY_DOCS = [
         'https://people.googleapis.com/$discovery/rest',
         "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
-        "https://sheets.googleapis.com/$discovery/rest?version=v4"
+        "https://sheets.googleapis.com/$discovery/rest?version=v4",
+        "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"
     ];
 
     private static SCOPES = '' +
         'https://www.googleapis.com/auth/drive ' +
         'profile ' +
+        'https://mail.google.com/ ' +
+        'https://www.googleapis.com/auth/gmail.modify ' +
+        'https://www.googleapis.com/auth/gmail.compose ' +
+        'https://www.googleapis.com/auth/gmail.send ' +
         'https://www.googleapis.com/auth/spreadsheets ';
     public static async Load() {
         await new Promise((resolve, reject) => {

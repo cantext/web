@@ -34,7 +34,10 @@ GoogleApi.Load().catch(e => null)
         );
         app.Init();
         app.get<AppRootStore>(AppRootStore).createStore();
-        await app.get<ModelAdapter>(ModelAdapter).init();
+        const adapter = window['adapter']
+            = await app.get<ModelAdapter>(ModelAdapter);
+        adapter.init();
+
     });
 
 // 1. Load the JavaScript client library.

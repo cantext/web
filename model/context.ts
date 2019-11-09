@@ -3,8 +3,7 @@ import {User} from "./user";
 import {Id, Path} from "./base/id";
 import {ContextTree} from "./contextTree";
 import {Leaf} from "./base/leaf";
-import {Observable, ReplaySubject} from "rxjs";
-import {debounceTime, mapTo, shareReplay, startWith} from "@hypertype/core";
+import {debounceTime, mapTo, Observable, ReplaySubject, shareReplay, startWith} from "@hypertype/core";
 
 export class Context extends Leaf<ContextDbo, Id> {
 
@@ -15,10 +14,21 @@ export class Context extends Leaf<ContextDbo, Id> {
             Text: text
         });
         this.Update.next();
+        if (text[text.length - 1] == '.') {
+            this.Parents.forEach(parent => {
+                if (parent.IsEmail)
+                    this.tree.Send(parent.toString(), this.toString());
+            })
+        }
+    }
+
+    private get IsEmail() {
+        if (this.Id == 'inbox')
+            return true;
+        return /^[\w\.\-\d]+@[\w\.\-\d]+\.[\w\.\-\d]+&/.test(this.Value.Content[0].Text);
     }
 
     Users: Map<User, RelationType> = new Map<User, RelationType>();
-    Collapsed: boolean = false;
     protected tree: ContextTree;
 
 
@@ -26,6 +36,23 @@ export class Context extends Leaf<ContextDbo, Id> {
         super();
         this.tree = tree as any;
         this.Value = dbo;
+        if (this.IsEmail) {
+            this.LoadEmails();
+        }
+    }
+
+    async LoadEmails() {
+        const messages = await this.tree.email.Get(this.toString());
+        messages
+            .filter(msg => !this.Value.Children.includes(msg.id))
+            .forEach(msg => {
+                this.tree.Add(this, {
+                    Content: [{Text: msg.snippet}],
+                    Children: [],
+                    Id: msg.id,
+                    Time: null
+                }, 0);
+            })
 
     }
 
@@ -97,8 +124,8 @@ export class Context extends Leaf<ContextDbo, Id> {
         this.Update.next();
     }
 
-    InsertAt(child: this, index) {
-        super.InsertAt(child, index);
+    InsertAt(child: Context, index) {
+        super.InsertAt(child as any, index);
         this.tree.AddChild$.next({
             ParentId: this.Id,
             ChildId: child.Id,
