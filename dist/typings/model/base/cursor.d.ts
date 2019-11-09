@@ -11,29 +11,29 @@ export declare class TreeCursor<TLeaf extends Leaf<TValue, TKey>, TValue extends
     getParent(path?: Path<TKey>): TLeaf;
     getGrand(path?: Path<TKey>): TLeaf;
     Path: Path<TKey>;
-    getLeftMove(path?: TKey[]): {
+    getLeftMove(path?: Path<TKey>): {
         parent: Path<TKey>;
         index: number;
     };
-    getRightMove(path?: TKey[]): {
+    getRightMove(path?: Path<TKey>): {
         parent: Path<TKey>;
         index: number;
     };
-    getTopMove(path?: TKey[]): {
+    getTopMove(path?: Path<TKey>): {
         parent: Path<TKey>;
         index: number;
     };
-    getBottomMove(path?: TKey[]): {
+    getBottomMove(path?: Path<TKey>): {
         parent: Path<TKey>;
         index: number;
     };
-    Update: ReplaySubject<TKey[]>;
+    Update: ReplaySubject<Path<TKey>>;
     Path$: Observable<Path<TKey>>;
     SetPath(path: any): void;
     Up(): void;
     Down(): void;
     getLastChild(path: Path<TKey>): any;
     getNextChild(path: Path<TKey>): any;
-    GetUp(path?: TKey[]): any;
-    GetDown(path?: TKey[]): any;
+    GetUp(path?: Path<TKey>): any;
+    GetDown(path?: Path<TKey>): any;
 }

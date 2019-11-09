@@ -1,8 +1,13 @@
 import { HyperComponent } from "@hypertype/ui";
 import { ContextTree } from "../../model/contextTree";
-export declare class RootComponent extends HyperComponent<ContextTree> {
+import { Observable } from "@hypertype/core";
+import { ModelAdapter } from "../../services/model.adapter";
+export declare class RootComponent extends HyperComponent<ContextTree & {
+    adapter: ModelAdapter;
+}> {
     private tree;
-    constructor(tree: ContextTree);
-    State$: import("@hypertype/core").Observable<ContextTree>;
-    Actions$: import("@hypertype/core").Observable<Event | KeyboardEvent>;
+    private adapter;
+    constructor(tree: ContextTree, adapter: ModelAdapter);
+    State$: Observable<any>;
+    Actions$: Observable<Event | KeyboardEvent>;
 }

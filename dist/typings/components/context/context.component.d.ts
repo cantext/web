@@ -13,7 +13,7 @@ export declare class ContextComponent extends HyperComponent<IState> {
     State$: Observable<{
         context: Context;
         isSelected: boolean;
-        path: string[];
+        path: Path<string>;
         state: any[];
     }>;
     private Editor$;

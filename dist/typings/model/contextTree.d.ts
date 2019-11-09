@@ -4,12 +4,15 @@ import { Context } from "./context";
 import { ContextDbo, RootDbo } from "./dbo/context.dbo";
 import { User } from "./user";
 import { Observable, ReplaySubject } from "@hypertype/core";
+import { EmailGoogleApi } from "../google-api/email.google-api";
 export declare class ContextTree extends Tree<Context, ContextDbo, Id> {
-    constructor();
+    email: EmailGoogleApi;
+    constructor(email: EmailGoogleApi);
+    Send(to: string, content: string): Promise<void>;
     Items: Map<Id, Context>;
     Root: Context;
-    readonly Parent: any;
-    readonly Children: Context[];
+    get Parent(): any;
+    get Children(): Context[];
     UserMap: Map<Id, User>;
     CurrentUser: User;
     Load(dbo?: RootDbo): void;
@@ -23,7 +26,14 @@ export declare class ContextTree extends Tree<Context, ContextDbo, Id> {
         Down: () => void;
         Up: () => void;
     };
-    Add(): Context;
+    Add(parent?: Context, dbo?: {
+        Content: {
+            Text: string;
+        }[];
+        Children: any[];
+        Id: string;
+        Time: any;
+    }, index?: number): Context;
     Delete(): void;
     AddChild$: ReplaySubject<{
         ParentId: any;
@@ -38,4 +48,5 @@ export declare class ContextTree extends Tree<Context, ContextDbo, Id> {
         ContextId: string;
         Text: string;
     }>;
+    switchCollapsed(): void;
 }

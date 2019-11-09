@@ -5,7 +5,7 @@ export declare class RootStore extends ObservableStore<RootState> {
     constructor(rootStore: RStore, root: ContextTree);
     Actions: ActionsCreator<unknown>;
     reducer: {
-        reduce: Reducer<RootState, import("redux").AnyAction>;
+        reduce: Reducer<RootState, import("@hypertype/app").AnyAction>;
     };
 }
 export declare class RootState {

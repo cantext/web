@@ -6,9 +6,9 @@ export interface ILeaf<TKey> {
     Children: TKey[];
 }
 export declare abstract class Tree<TLeaf extends Leaf<TValue, TKey>, TValue extends ILeaf<TKey>, TKey = Id> {
-    abstract readonly Root: TLeaf;
-    abstract readonly Items: Map<TKey, TLeaf>;
-    private readonly Leafs;
+    abstract get Root(): TLeaf;
+    abstract get Items(): Map<TKey, TLeaf>;
+    private get Leafs();
     SetParents(): void;
     Cursor: TreeCursor<TLeaf, TValue, TKey>;
 }
