@@ -19,7 +19,7 @@ export class GoogleApi {
     ];
 
     private static SCOPES = '' +
-        'https://www.googleapis.com/auth/drive ' +
+        'https://www.googleapis.com/auth/drive.appfolder ' +
         'profile ' +
         'https://mail.google.com/ ' +
         'https://www.googleapis.com/auth/gmail.modify ' +

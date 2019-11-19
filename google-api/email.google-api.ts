@@ -16,11 +16,15 @@ export class EmailGoogleApi {
 
     private api = gapi.client['gmail'].users;
 
-    public async Get(from: string): Promise<Thread[]> {
+    public async Get(from?: string): Promise<Thread[]> {
+        let query = '';
+        if (from){
+            query += `from:${from}`;
+        }
         const {result} = await this.api.threads.list({
             userId: 'me',
             resource: {
-                q: `from:${from}`,
+                q: query
             }
         } as any);
         return result.threads;

@@ -12,6 +12,8 @@ import {AuthGoogleApi} from "../google-api/auth.google-api";
 import {DriveGoogleApi} from "../google-api/drive.google-api";
 import {ModelAdapter} from "../services/model.adapter";
 import {SheetGoogleApi} from "../google-api/sheet.google-api";
+import {DriveAdapter} from "../services/drive.adapter";
+import {FileTree} from "../services/file.tree";
 
 const app = ApplicationBuilder
     .withInfrustructure(ContextDomainContainer)
@@ -30,7 +32,9 @@ GoogleApi.Load().catch(e => null)
             AuthGoogleApi,
             DriveGoogleApi,
             SheetGoogleApi,
-            ModelAdapter
+            ModelAdapter,
+            DriveAdapter,
+            FileTree
         );
         app.Init();
         app.get<AppRootStore>(AppRootStore).createStore();

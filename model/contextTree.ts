@@ -78,7 +78,7 @@ export class ContextTree extends Tree<Context, ContextDbo, Id> {
         if (this.Items.get('inbox')) {
             const inbox = this.Items.get('inbox');
             inbox.SetText(`Inbox (${this.email.me})`);
-            inbox.LoadEmails();
+            // inbox.LoadEmails();
         }
         this.Update.next();
     }

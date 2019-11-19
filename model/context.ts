@@ -5,6 +5,8 @@ import {ContextTree} from "./contextTree";
 import {Leaf} from "./base/leaf";
 import {debounceTime, mapTo, Observable, ReplaySubject, shareReplay, startWith} from "@hypertype/core";
 
+const emailRegex = /^([\w\.\-\d]+@[\w\.\-\d]+\.[\w\.\-\d]+)&/;
+
 export class Context extends Leaf<ContextDbo, Id> {
 
     SetText(text: any) {
@@ -25,7 +27,7 @@ export class Context extends Leaf<ContextDbo, Id> {
     private get IsEmail() {
         if (this.Id == 'inbox')
             return true;
-        return /^[\w\.\-\d]+@[\w\.\-\d]+\.[\w\.\-\d]+&/.test(this.Value.Content[0].Text);
+        return emailRegex.test(this.Value.Content[0].Text);
     }
 
     Users: Map<User, RelationType> = new Map<User, RelationType>();
@@ -36,13 +38,14 @@ export class Context extends Leaf<ContextDbo, Id> {
         super();
         this.tree = tree as any;
         this.Value = dbo;
-        if (this.IsEmail) {
-            this.LoadEmails();
-        }
+        // if (this.IsEmail) {
+        //     this.LoadEmails();
+        // }
     }
 
     async LoadEmails() {
-        const messages = await this.tree.email.Get(this.toString());
+        const [,email] = emailRegex.exec(this.Value.Content[0].Text) || [];
+        const messages = await this.tree.email.Get(email);
         messages
             .filter(msg => !this.Value.Children.includes(msg.id))
             .forEach(msg => {
@@ -69,6 +72,18 @@ export class Context extends Leaf<ContextDbo, Id> {
 
     public get Id() {
         return this.Value.Id;
+    }
+    public set Id(value) {
+        this.tree.Items.delete(this.Value.Id);
+        this.tree.Items.set(value, this);
+        this.Parents.forEach(p => {
+            p.Value.Children.splice(p.Value.Children.indexOf(this.Value.Id), 1, value)
+        });
+        this.Children.forEach(p => {
+            p.Parents.delete(this.Value.Id);
+            p.Parents.set(value, this);
+        });
+        this.Value.Id = value;
     }
 
     // public get Path() {

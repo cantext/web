@@ -33,19 +33,19 @@ const DefaultDataTest1: () => RootDbo = () => ({
             }]
         },
         {
+            Id: '1.2.1',
+            Children: [],
+            Time: utc().toISO(),
+            Content: [{
+                Text: '1.2.1 Сущности',
+            }]
+        },
+        {
             Id: 'inbox',
             Children: [],
             Time: utc().toISO(),
             Content: [{
                 Text: 'Inbox',
-            }]
-        },
-        {
-            Id: '1.1',
-            Children: ['1.2'],
-            Time: utc().toISO(),
-            Content: [{
-                Text: '1.1 Пример использования',
             }]
         },
         {
@@ -57,11 +57,11 @@ const DefaultDataTest1: () => RootDbo = () => ({
             }]
         },
         {
-            Id: '1.2.1',
-            Children: [],
+            Id: '1.1',
+            Children: ['1.2'],
             Time: utc().toISO(),
             Content: [{
-                Text: '1.2.1 Сущности',
+                Text: '1.1 Пример использования',
             }]
         },
         {
