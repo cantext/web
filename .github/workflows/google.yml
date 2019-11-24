@@ -57,10 +57,10 @@ jobs:
     - name: Publish
       run: |
         docker push gcr.io/$GKE_PROJECT/$IMAGE:$GITHUB_SHA
-        
+
     # Deploy the Docker image to the GKE cluster
     - name: Deploy
       run: |
         gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE --project $GKE_PROJECT
-        kubectl rollout status deployment/gke-test
-        kubectl get services -o wide
+        kubectl create deployment $IMAGE --image=gcr.io/$GKE_PROJECT/$IMAGE:$GITHUB_SHA
+        kubectl expose deployment $IMAGE --type=LoadBalancer --port 80 --target-port 80
