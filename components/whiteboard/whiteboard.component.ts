@@ -23,7 +23,6 @@ export class WhiteboardComponent extends HyperComponent<IState, IEvents> {
         first(),
         map(canvas => {
             this.fabric = new fabric.Canvas(canvas, {
-                selectionColor: 'black',
                 interactive: true,
             });
             this.fabric.on('path:created', (e: any) => {

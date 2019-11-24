@@ -15,6 +15,7 @@ import {SheetGoogleApi} from "../google-api/sheet.google-api";
 import {DriveAdapter} from "../services/drive.adapter";
 import {FileTree} from "../services/file.tree";
 import {WhiteboardComponent} from "../components/whiteboard/whiteboard.component";
+import {TreeComponent} from "../components/tree/tree.component";
 
 const app = ApplicationBuilder
     .withInfrustructure(ContextDomainContainer)
@@ -25,6 +26,7 @@ const app = ApplicationBuilder
         RootComponent,
         ContextComponent,
         WhiteboardComponent,
+        TreeComponent,
         RootStore,
     ))
     .withRouter({

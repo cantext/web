@@ -547,12 +547,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "RootComponent", function() { return RootComponent; });
 /* harmony import */ var _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/ui */ "./node_modules/@hypertype/ui/dist/index.js");
 /* harmony import */ var _hypertype_ui__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../model/contextTree */ "./model/contextTree.ts");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
-/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _services_model_adapter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../services/model.adapter */ "./services/model.adapter.ts");
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
-/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_2__);
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -565,8 +563,6 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 
-
-
 const pages = {
     whiteboard(state) {
         return Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"])(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"], 'whiteboard') `
@@ -574,76 +570,16 @@ const pages = {
         `;
     },
     tree(state) {
-        if (!state.tree.Root)
-            return '';
         return Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"])(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["wire"], 'tree') `
-            <app-context path="${[state.tree.Root.Id]}"></app-context>
+            <ctx-tree></ctx-tree>
         `;
     }
 };
 let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["HyperComponent"] {
-    constructor(tree, adapter, router) {
+    constructor(router) {
         super();
-        this.tree = tree;
-        this.adapter = adapter;
         this.router = router;
-        this.State$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["combineLatest"])([
-            this.tree.State$,
-            this.router.State$
-        ]).pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["map"])(([tree, router]) => ({ tree, router, adapter: this.adapter })));
-        this.Actions$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["merge"])(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keydown').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])((event) => {
-            switch (event.key) {
-                case 'ArrowUp':
-                    event.preventDefault();
-                    if (event.shiftKey && event.ctrlKey)
-                        this.tree.Move.Up();
-                    else if (event.ctrlKey)
-                        this.tree.Cursor.Up();
-                    break;
-                case 'ArrowDown':
-                    event.preventDefault();
-                    if (event.shiftKey && event.ctrlKey)
-                        this.tree.Move.Down();
-                    else if (event.ctrlKey)
-                        this.tree.Cursor.Down();
-                    break;
-                case 'ArrowLeft':
-                    if (event.shiftKey && event.ctrlKey)
-                        this.tree.Move.Left();
-                    break;
-                case 'ArrowRight':
-                    if (event.shiftKey && event.ctrlKey)
-                        this.tree.Move.Right();
-                    break;
-                case 'Delete':
-                    if (event.shiftKey)
-                        this.tree.Delete();
-                    break;
-                case 'Tab':
-                    event.preventDefault();
-                    event.shiftKey ? this.tree.Move.Left() : this.tree.Move.Right();
-                    break;
-                case 'Enter':
-                    if (!event.shiftKey) {
-                        this.tree.Add();
-                        event.preventDefault();
-                    }
-                    break;
-                case 'Delete':
-                    if (event.shiftKey) {
-                        this.tree.Add();
-                        event.preventDefault();
-                    }
-                    break;
-                case '.':
-                case 'ю':
-                    if (event.ctrlKey)
-                        this.tree.switchCollapsed();
-                default:
-                // console.log(event.key)
-            }
-        })), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keyup').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])(() => {
-        })));
+        this.State$ = this.router.State$;
         this.Events = {
             goto: (path) => {
                 this.router.Actions.navigate(path);
@@ -652,23 +588,19 @@ let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_
     }
 };
 RootComponent = __decorate([
-    Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Injectable"])(true),
+    Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Injectable"])(true),
     Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["Component"])({
         name: 'app-root',
         template: (html, state, events) => html `>
         <div>
-            <google-login></google-login>
-            <button onclick="${state.adapter.Clear}">Clear</button>
             <button onclick="${events.goto(e => 'tree')}">tree</button>
             <button onclick="${events.goto(e => 'whiteboard')}">whiteboard</button>
         </div>
-        ${pages[state.router.name](state)}
+        ${pages[state.name](state)}
     `,
         style: __webpack_require__(/*! ./root.style.less */ "./entry/root/root.style.less")
     }),
-    __metadata("design:paramtypes", [_model_contextTree__WEBPACK_IMPORTED_MODULE_1__["ContextTree"],
-        _services_model_adapter__WEBPACK_IMPORTED_MODULE_3__["ModelAdapter"],
-        _hypertype_app__WEBPACK_IMPORTED_MODULE_4__["Router"]])
+    __metadata("design:paramtypes", [_hypertype_app__WEBPACK_IMPORTED_MODULE_2__["Router"]])
 ], RootComponent);
 
 
