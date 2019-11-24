@@ -1,29 +1,50 @@
 import {Component, HyperComponent, wire} from "@hypertype/ui";
 import {ContextTree} from "../../model/contextTree";
-import {fromEvent, Injectable, merge, tap, map, Observable} from "@hypertype/core";
+import {fromEvent, Injectable, merge, tap, map, Observable, combineLatest} from "@hypertype/core";
 import {ModelAdapter} from "../../services/model.adapter";
+import {Router, RouterState} from "@hypertype/app";
+
+const pages = {
+    whiteboard(state: IState) {
+        return wire(wire, 'whiteboard')`
+            <ctx-whiteboard></ctx-whiteboard>
+        `
+    },
+
+    tree(state: IState) {
+        if (!state.tree.Root)
+            return '';
+        return wire(wire,'tree')`
+            <app-context path="${[state.tree.Root.Id]}"></app-context>
+        `;
+    }
+};
 
 @Injectable(true)
 @Component({
     name: 'app-root',
-    template: (html, tree: ContextTree&{adapter: ModelAdapter}) =>  html`
-        <google-login></google-login>
-        <button onclick="${tree.adapter.Clear}">Clear</button>
-        ${ tree.Root ? wire(wire, tree.Root.getKey([]))`
-            <app-context path="${[tree.Root.Id]}"></app-context>
-        ` : ''}
+    template: (html, state: IState) => html`>
+        <div>
+            <google-login></google-login>
+            <button onclick="${state.adapter.Clear}">Clear</button>
+        </div>
+        ${pages[state.router.name]}
     `,
     style: require('./root.style.less')
 })
-export class RootComponent extends HyperComponent<ContextTree&{adapter: ModelAdapter}> {
+export class RootComponent extends HyperComponent<IState> {
 
     constructor(private tree: ContextTree,
-                private adapter: ModelAdapter) {
+                private adapter: ModelAdapter,
+                private router: Router) {
         super();
     }
 
-    public State$: Observable<any> = this.tree.State$.pipe(
-        map(state => ({...state, adapter: this.adapter}))
+    public State$: Observable<IState> = combineLatest([
+        this.tree.State$,
+        this.router.State$
+    ]).pipe(
+        map(([tree, router]) => ({tree, router, adapter: this.adapter}))
     );
 
     public Actions$ = merge(
@@ -61,13 +82,13 @@ export class RootComponent extends HyperComponent<ContextTree&{adapter: ModelAda
                         event.shiftKey ? this.tree.Move.Left() : this.tree.Move.Right();
                         break;
                     case 'Enter':
-                        if (!event.shiftKey){
+                        if (!event.shiftKey) {
                             this.tree.Add();
                             event.preventDefault();
                         }
                         break;
                     case 'Delete':
-                        if (event.shiftKey){
+                        if (event.shiftKey) {
                             this.tree.Add();
                             event.preventDefault();
                         }
@@ -77,7 +98,7 @@ export class RootComponent extends HyperComponent<ContextTree&{adapter: ModelAda
                         if (event.ctrlKey)
                             this.tree.switchCollapsed();
                     default:
-                        // console.log(event.key)
+                    // console.log(event.key)
                 }
 
             })
@@ -89,4 +110,10 @@ export class RootComponent extends HyperComponent<ContextTree&{adapter: ModelAda
             })
         )
     );
+}
+
+interface IState {
+    tree: ContextTree,
+    router: RouterState,
+    adapter: ModelAdapter
 }

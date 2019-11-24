@@ -11,7 +11,7 @@ export class ContextFile extends Leaf<ContextDbo, string> {
 
 
     get Id(): string {
-        return this.file.Id;
+        return this.file.id;
     }
 
 }
