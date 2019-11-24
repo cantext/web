@@ -644,18 +644,25 @@ let RootComponent = class RootComponent extends _hypertype_ui__WEBPACK_IMPORTED_
             }
         })), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["fromEvent"])(document, 'keyup').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["tap"])(() => {
         })));
+        this.Events = {
+            goto: (path) => {
+                this.router.Actions.navigate(path);
+            }
+        };
     }
 };
 RootComponent = __decorate([
     Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Injectable"])(true),
     Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["Component"])({
         name: 'app-root',
-        template: (html, state) => html `>
+        template: (html, state, events) => html `>
         <div>
             <google-login></google-login>
             <button onclick="${state.adapter.Clear}">Clear</button>
+            <button onclick="${events.goto(e => 'tree')}">tree</button>
+            <button onclick="${events.goto(e => 'whiteboard')}">whiteboard</button>
         </div>
-        ${pages[state.router.name]}
+        ${pages[state.router.name](state)}
     `,
         style: __webpack_require__(/*! ./root.style.less */ "./entry/root/root.style.less")
     }),

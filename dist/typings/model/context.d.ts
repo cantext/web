@@ -14,6 +14,7 @@ export declare class Context extends Leaf<ContextDbo, Id> {
     GetDbo(): any;
     toString(): string;
     get Id(): string;
+    set Id(value: string);
     private _pathToKey;
     getKey(path: Path): any;
     Move(from: Path, { parent: to, index }: {

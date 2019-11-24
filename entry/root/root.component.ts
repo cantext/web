@@ -23,12 +23,14 @@ const pages = {
 @Injectable(true)
 @Component({
     name: 'app-root',
-    template: (html, state: IState) => html`>
+    template: (html, state: IState, events) => html`>
         <div>
             <google-login></google-login>
             <button onclick="${state.adapter.Clear}">Clear</button>
+            <button onclick="${events.goto(e =>'tree')}">tree</button>
+            <button onclick="${events.goto(e => 'whiteboard')}">whiteboard</button>
         </div>
-        ${pages[state.router.name]}
+        ${pages[state.router.name](state)}
     `,
     style: require('./root.style.less')
 })
@@ -110,6 +112,12 @@ export class RootComponent extends HyperComponent<IState> {
             })
         )
     );
+
+    public Events = {
+        goto: (path) => {
+            this.router.Actions.navigate(path);
+        }
+    }
 }
 
 interface IState {
