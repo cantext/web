@@ -14,7 +14,7 @@ export class EmailGoogleApi {
     }
 
 
-    private api = gapi.client['gmail'].users;
+    private api = gapi.client['gmail'] && gapi.client['gmail'].users;
 
     public async Get(from?: string): Promise<Thread[]> {
         let query = '';

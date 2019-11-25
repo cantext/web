@@ -21,7 +21,8 @@ const pages = {
 @Injectable(true)
 @Component({
     name: 'app-root',
-    template: (html, state: RouterState, events) => html`>
+    template: (html, state: RouterState, events) => html`
+        <google-login></google-login>
         <div>
             <button onclick="${events.goto(e => 'tree')}">tree</button>
             <button onclick="${events.goto(e => 'whiteboard')}">whiteboard</button>

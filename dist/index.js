@@ -337,6 +337,151 @@ GoogleLoginComponent = __decorate([
 
 /***/ }),
 
+/***/ "./components/tree/tree.component.ts":
+/*!*******************************************!*\
+  !*** ./components/tree/tree.component.ts ***!
+  \*******************************************/
+/*! exports provided: TreeComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TreeComponent", function() { return TreeComponent; });
+/* harmony import */ var _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @hypertype/ui */ "./node_modules/@hypertype/ui/dist/index.js");
+/* harmony import */ var _hypertype_ui__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _tree_template__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./tree.template */ "./components/tree/tree.template.ts");
+/* harmony import */ var _model_contextTree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../model/contextTree */ "./model/contextTree.ts");
+/* harmony import */ var _services_model_adapter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../services/model.adapter */ "./services/model.adapter.ts");
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @hypertype/app */ "./node_modules/@hypertype/app/dist/esm/index.js");
+/* harmony import */ var _hypertype_app__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_hypertype_app__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @hypertype/core */ "./node_modules/@hypertype/core/dist/esm/index.js");
+/* harmony import */ var _hypertype_core__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__);
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+
+let TreeComponent = class TreeComponent extends _hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["HyperComponent"] {
+    constructor(tree, adapter, router) {
+        super();
+        this.tree = tree;
+        this.adapter = adapter;
+        this.router = router;
+        this.State$ = this.tree.State$.pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["map"])((tree) => ({ tree, adapter: this.adapter })));
+        this.Actions$ = Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["merge"])(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["fromEvent"])(document, 'keydown').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["tap"])((event) => {
+            switch (event.key) {
+                case 'ArrowUp':
+                    event.preventDefault();
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Up();
+                    else if (event.ctrlKey)
+                        this.tree.Cursor.Up();
+                    break;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Down();
+                    else if (event.ctrlKey)
+                        this.tree.Cursor.Down();
+                    break;
+                case 'ArrowLeft':
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Left();
+                    break;
+                case 'ArrowRight':
+                    if (event.shiftKey && event.ctrlKey)
+                        this.tree.Move.Right();
+                    break;
+                case 'Delete':
+                    if (event.shiftKey)
+                        this.tree.Delete();
+                    break;
+                case 'Tab':
+                    event.preventDefault();
+                    event.shiftKey ? this.tree.Move.Left() : this.tree.Move.Right();
+                    break;
+                case 'Enter':
+                    if (!event.shiftKey) {
+                        this.tree.Add();
+                        event.preventDefault();
+                    }
+                    break;
+                case 'Delete':
+                    if (event.shiftKey) {
+                        this.tree.Add();
+                        event.preventDefault();
+                    }
+                    break;
+                case '.':
+                case 'ю':
+                    if (event.ctrlKey)
+                        this.tree.switchCollapsed();
+                default:
+                // console.log(event.key)
+            }
+        })), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["fromEvent"])(document, 'keyup').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["tap"])(() => {
+        })));
+    }
+};
+TreeComponent = __decorate([
+    Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_5__["Injectable"])(true),
+    Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["Component"])({
+        name: 'ctx-tree',
+        template: _tree_template__WEBPACK_IMPORTED_MODULE_1__["Template"],
+        style: __webpack_require__(/*! ./tree.style.less */ "./components/tree/tree.style.less")
+    }),
+    __metadata("design:paramtypes", [_model_contextTree__WEBPACK_IMPORTED_MODULE_2__["ContextTree"],
+        _services_model_adapter__WEBPACK_IMPORTED_MODULE_3__["ModelAdapter"],
+        _hypertype_app__WEBPACK_IMPORTED_MODULE_4__["Router"]])
+], TreeComponent);
+
+
+
+/***/ }),
+
+/***/ "./components/tree/tree.style.less":
+/*!*****************************************!*\
+  !*** ./components/tree/tree.style.less ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../node_modules/@hypertype/tools/node_modules/css-loader/dist/runtime/api.js */ "./node_modules/@hypertype/tools/node_modules/css-loader/dist/runtime/api.js")(false);
+// Module
+exports.push([module.i, "ctx-tree {\n  display: block;\n}\n", ""]);
+
+
+
+/***/ }),
+
+/***/ "./components/tree/tree.template.ts":
+/*!******************************************!*\
+  !*** ./components/tree/tree.template.ts ***!
+  \******************************************/
+/*! exports provided: Template */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Template", function() { return Template; });
+const Template = (html, state) => html `
+    <button onclick="${state.adapter.Clear}">Clear</button>
+    <app-context path="${[state.tree.Root.Id]}"></app-context>
+`;
+
+
+/***/ }),
+
 /***/ "./components/whiteboard/whiteboard.component.ts":
 /*!*******************************************************!*\
   !*** ./components/whiteboard/whiteboard.component.ts ***!
@@ -372,7 +517,6 @@ let WhiteboardComponent = class WhiteboardComponent extends _hypertype_ui__WEBPA
         super();
         this.fabric$ = this.select('canvas').pipe(Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["filter"])(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Fn"].Ib), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["first"])(), Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["map"])(canvas => {
             this.fabric = new fabric__WEBPACK_IMPORTED_MODULE_3__["fabric"].Canvas(canvas, {
-                selectionColor: 'black',
                 interactive: true,
             });
             this.fabric.on('path:created', (e) => {
@@ -482,6 +626,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _services_drive_adapter__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../services/drive.adapter */ "./services/drive.adapter.ts");
 /* harmony import */ var _services_file_tree__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../services/file.tree */ "./services/file.tree.ts");
 /* harmony import */ var _components_whiteboard_whiteboard_component__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../components/whiteboard/whiteboard.component */ "./components/whiteboard/whiteboard.component.ts");
+/* harmony import */ var _components_tree_tree_component__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../components/tree/tree.component */ "./components/tree/tree.component.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -508,11 +653,12 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 const app = _hypertype_app__WEBPACK_IMPORTED_MODULE_1__["ApplicationBuilder"]
     .withInfrustructure(_model_container__WEBPACK_IMPORTED_MODULE_9__["ContextDomainContainer"])
     .withInfrustructure(_hypertype_infr__WEBPACK_IMPORTED_MODULE_7__["InfrContainer"])
     .withInfrustructure(_hypertype_infr_browser__WEBPACK_IMPORTED_MODULE_8__["BrowserContainer"])
-    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_3__["GoogleLoginComponent"], _root_root_component__WEBPACK_IMPORTED_MODULE_4__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_5__["ContextComponent"], _components_whiteboard_whiteboard_component__WEBPACK_IMPORTED_MODULE_16__["WhiteboardComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_6__["RootStore"]))
+    .withUI(_hypertype_core__WEBPACK_IMPORTED_MODULE_2__["Container"].withProviders(_components_google_login_component__WEBPACK_IMPORTED_MODULE_3__["GoogleLoginComponent"], _root_root_component__WEBPACK_IMPORTED_MODULE_4__["RootComponent"], _components_context_context_component__WEBPACK_IMPORTED_MODULE_5__["ContextComponent"], _components_whiteboard_whiteboard_component__WEBPACK_IMPORTED_MODULE_16__["WhiteboardComponent"], _components_tree_tree_component__WEBPACK_IMPORTED_MODULE_17__["TreeComponent"], _store_RootStore__WEBPACK_IMPORTED_MODULE_6__["RootStore"]))
     .withRouter({
     routes: [
         { path: '/', name: 'root', forwardTo: 'tree' },
@@ -591,7 +737,8 @@ RootComponent = __decorate([
     Object(_hypertype_core__WEBPACK_IMPORTED_MODULE_1__["Injectable"])(true),
     Object(_hypertype_ui__WEBPACK_IMPORTED_MODULE_0__["Component"])({
         name: 'app-root',
-        template: (html, state, events) => html `>
+        template: (html, state, events) => html `
+        <google-login></google-login>
         <div>
             <button onclick="${events.goto(e => 'tree')}">tree</button>
             <button onclick="${events.goto(e => 'whiteboard')}">whiteboard</button>
@@ -713,7 +860,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 class DriveGoogleApi {
     constructor() {
-        this.filesApi = gapi.client.drive.files;
+        this.filesApi = gapi.client.drive && gapi.client.drive.files;
     }
     ListAppData() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -817,7 +964,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 let EmailGoogleApi = class EmailGoogleApi {
     constructor(authService) {
         this.authService = authService;
-        this.api = gapi.client['gmail'].users;
+        this.api = gapi.client['gmail'] && gapi.client['gmail'].users;
     }
     get me() {
         return this.authService.User.email;
@@ -14671,7 +14818,7 @@ const WebSocketUrlInjectionToken = new _hypertype_core__WEBPACK_IMPORTED_MODULE_
 /*!***************************************************************!*\
   !*** ./node_modules/@hypertype/infr/dist/esm/common/index.js ***!
   \***************************************************************/
-/*! exports provided: BaseWebSocketService, InfrContainer, AuthContainer, ITokenStore, WebSocketUrlInjectionToken, ApiHttpClient, Logger, LoggerLevel, ApiUrlInjectionToken, ApiService, IRequestService, IWebSocketService, StateLogger, HttpTransportType, HttpClient, HttpResponse */
+/*! exports provided: BaseWebSocketService, Logger, LoggerLevel, ApiUrlInjectionToken, ApiService, IRequestService, IWebSocketService, WebSocketUrlInjectionToken, StateLogger, InfrContainer, AuthContainer, HttpTransportType, HttpClient, HttpResponse, ITokenStore, ApiHttpClient */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

@@ -1,7 +1,7 @@
 import File = gapi.client.drive.File
 
 export class DriveGoogleApi {
-    private filesApi = gapi.client.drive.files;
+    private filesApi = gapi.client.drive && gapi.client.drive.files;
 
 
     public async ListAppData() {
